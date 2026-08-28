@@ -56,7 +56,6 @@ fun calcularDescuento(total: Double): Double {
     }
 }
 
-// RETO ADICIONAL 1: BUSCAR PRODUCTO
 fun buscarProducto(
     productos: List<Producto>,
     nombre: String
@@ -66,7 +65,6 @@ fun buscarProducto(
     }
 }
 
-// RETO ADICIONAL 2: ELIMINAR PRODUCTO
 fun eliminarProducto(
     productos: MutableList<Producto>,
     nombre: String
