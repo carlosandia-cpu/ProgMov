@@ -13,6 +13,7 @@ fun main() {
 
     val nombresCursos = mutableListOf<String>()
     val creditosCursos = mutableListOf<Int>()
+    val costosCursos = mutableListOf<Double>()
 
     for (i in 1..cantidadCursos) {
 
@@ -25,7 +26,34 @@ fun main() {
         print("Cantidad de creditos: ")
         val creditos = readln().toInt()
         creditosCursos.add(creditos)
+
+        // Costo individual del curso
+        val costoCurso = creditos * valorCredito
+        costosCursos.add(costoCurso)
     }
 
-    println("\nDatos ingresados correctamente.")
+    // Total de creditos
+    val totalCreditos = creditosCursos.sum()
+
+    // Total a pagar
+    val totalPagar = costosCursos.sum()
+
+    // Carga academica
+    val cargaAcademica = when {
+        totalCreditos <= 12 -> "M.R (Malla Regular)"
+        totalCreditos <= 18 -> "Carga Completa"
+        else -> "Requiere Autorizacion"
+    }
+
+    // Cantidad de cuotas
+    val cantidadCuotas = if (totalPagar > 2500) {
+        3
+    } else {
+        2
+    }
+
+    // Valor de cada cuota
+    val montoCuota = totalPagar / cantidadCuotas
+
+    println("\nCalculos realizados correctamente.")
 }
