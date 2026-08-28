@@ -1,0 +1,17 @@
+Desarrolla un programa de consola en Kotlin que simule un carrito de compras.
+
+Requisitos:
+- Crear una data class Producto con nombre, precio y cantidad.
+- Utilizar una MutableList para almacenar productos.
+- Registrar al menos 4 productos.
+- Crear funciones para calcular subtotal, IGV del 18% y total.
+- Mostrar el detalle de los productos con columnas alineadas y montos con 2 decimales.
+- Mostrar la cantidad de productos registrados.
+- Identificar el producto con mayor precio utilizando maxByOrNull.
+- Aplicar un descuento utilizando when:
+  - 10% si el total supera S/ 5000.
+  - 5% si el total supera S/ 3000.
+  - Sin descuento en otro caso.
+- Mostrar el descuento aplicado y el total final con descuento.
+- Organizar el código mediante funciones y utilizar buenas prácticas de Kotlin.
+- Mostrar una salida clara y ordenada por consola.
