@@ -11,9 +11,9 @@ fun main() {
     print("Valor de cada credito: ")
     val valorCredito = readln().toDouble()
 
-    val nombresCursos = mutableListOf<String>()
-    val creditosCursos = mutableListOf<Int>()
-    val costosCursos = mutableListOf<Double>()
+    var totalCreditos = 0
+    var totalPagar = 0.0
+    var detalleCursos = ""
 
     for (i in 1..cantidadCursos) {
 
@@ -21,39 +21,55 @@ fun main() {
 
         print("Nombre del curso: ")
         val nombreCurso = readln()
-        nombresCursos.add(nombreCurso)
 
         print("Cantidad de creditos: ")
         val creditos = readln().toInt()
-        creditosCursos.add(creditos)
 
-        // Costo individual del curso
         val costoCurso = creditos * valorCredito
-        costosCursos.add(costoCurso)
+
+        totalCreditos += creditos
+        totalPagar += costoCurso
+
+        detalleCursos += "%-20s %-10d S/ %.2f\n".format(
+            nombreCurso,
+            creditos,
+            costoCurso
+        )
     }
 
-    // Total de creditos
-    val totalCreditos = creditosCursos.sum()
-
-    // Total a pagar
-    val totalPagar = costosCursos.sum()
-
-    // Carga academica
     val cargaAcademica = when {
         totalCreditos <= 12 -> "M.R (Malla Regular)"
         totalCreditos <= 18 -> "Carga Completa"
         else -> "Requiere Autorizacion"
     }
 
-    // Cantidad de cuotas
     val cantidadCuotas = if (totalPagar > 2500) {
         3
     } else {
         2
     }
 
-    // Valor de cada cuota
     val montoCuota = totalPagar / cantidadCuotas
 
-    println("\nCalculos realizados correctamente.")
+    println("\n==============================================")
+    println("           RESULTADO DE MATRICULA")
+    println("==============================================")
+    println("Estudiante: $nombreEstudiante")
+    println()
+
+    println("%-20s %-10s %-10s".format("Curso", "Creditos", "Costo"))
+    println("----------------------------------------------")
+
+    print(detalleCursos)
+
+    println("----------------------------------------------")
+    println("RESUMEN")
+    println("----------------------------------------------")
+    println("Cursos matriculados: $cantidadCursos")
+    println("Total de creditos: $totalCreditos")
+    println("Total a pagar: S/ %.2f".format(totalPagar))
+    println("Carga academica: $cargaAcademica")
+    println(
+        "Forma de pago: $cantidadCuotas cuotas de S/ %.2f".format(montoCuota)
+    )
 }
