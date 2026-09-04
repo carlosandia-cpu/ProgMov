@@ -3,6 +3,7 @@ package com.andia.costocarrera
 fun leerTextoValido(mensaje: String): String {
     while (true) {
         print(mensaje)
+
         val texto = readln().trim()
 
         if (
@@ -82,29 +83,32 @@ fun seleccionarTurno(): Pair<String, Double> {
 fun registrarEstudiante(numeroRegistro: Int) {
 
     println("\n================================")
-    println("       REGISTRO N° $numeroRegistro")
+    println("          REGISTRO N° $numeroRegistro")
     println("================================")
 
     val nombreEstudiante =
         leerTextoValido("Nombre del estudiante: ")
 
+    // CATEGORÍA
     val categoria = seleccionarCategoria()
 
-    if (categoria == "Becado") {
+    val montoMatricula = if (categoria == "Ordinario") {
 
-        println("\n================================")
-        println("       RESUMEN DE MATRÍCULA")
-        println("================================")
-        println("Estudiante : $nombreEstudiante")
-        println("Categoría  : $categoria")
-        println("Matrícula  : S/ 0.00")
-        println("IGV        : S/ 0.00")
-        println("================================")
+        leerDoublePositivo(
+            "Ingrese el monto de matrícula: S/ "
+        )
 
-        return
+    } else {
+
+        println("\nEstudiante becado.")
+        println("Monto de matrícula: S/ 0.00")
+
+        0.0
     }
 
-    val (turno, porcentajeTurno) = seleccionarTurno()
+    // TURNO
+    val (turno, porcentajeTurno) =
+        seleccionarTurno()
 
     println("\n========== DATOS ACADÉMICOS ==========")
 
@@ -112,15 +116,15 @@ fun registrarEstudiante(numeroRegistro: Int) {
         leerEnteroPositivo("Cantidad de cursos: ")
 
     val valorCredito =
-        leerDoublePositivo("Valor de cada crédito: ")
+        leerDoublePositivo("Valor de cada crédito: S/ ")
 
     var totalCreditos = 0
-    var totalPagar = 0.0
+    var totalCursos = 0.0
     var detalleCursos = ""
 
     for (i in 1..cantidadCursos) {
 
-        println("\n----- Curso $i -----")
+        println("\n---------- CURSO $i ----------")
 
         val nombreCurso =
             leerTextoValido("Nombre del curso: ")
@@ -128,30 +132,52 @@ fun registrarEstudiante(numeroRegistro: Int) {
         val creditos =
             leerEnteroPositivo("Cantidad de créditos: ")
 
-        val costoCurso = creditos * valorCredito
+        val costoCurso =
+            creditos * valorCredito
 
         totalCreditos += creditos
-        totalPagar += costoCurso
+        totalCursos += costoCurso
 
-        detalleCursos += "%-20s %-10d S/ %.2f\n".format(
-            nombreCurso,
-            creditos,
-            costoCurso
-        )
+        detalleCursos +=
+            "%-20s %-10d S/ %.2f\n".format(
+                nombreCurso,
+                creditos,
+                costoCurso
+            )
     }
 
-    val recargoTurno = totalPagar * porcentajeTurno
-    val totalConTurno = totalPagar + recargoTurno
+    // MONTO BASE
+    val montoBase =
+        montoMatricula + totalCursos
 
-    val igv = totalConTurno * 0.18
-    val matriculaFinal = totalConTurno + igv
+    // RECARGO POR TURNO
+    val recargoTurno =
+        montoBase * porcentajeTurno
 
+    val totalConTurno =
+        montoBase + recargoTurno
+
+    // IGV 18%
+    val igv =
+        totalConTurno * 0.18
+
+    // TOTAL FINAL
+    val totalFinal =
+        totalConTurno + igv
+
+    // CARGA ACADÉMICA
     val cargaAcademica = when {
-        totalCreditos <= 12 -> "M.R (Malla Regular)"
-        totalCreditos <= 18 -> "Carga Completa"
-        else -> "Sobrecarga Académica"
+        totalCreditos <= 12 ->
+            "M.R (Malla Regular)"
+
+        totalCreditos <= 18 ->
+            "Carga Completa"
+
+        else ->
+            "Sobrecarga Académica"
     }
 
+    // RESULTADO
     println("\n================================")
     println("       RESUMEN DE MATRÍCULA")
     println("================================")
@@ -171,19 +197,66 @@ fun registrarEstudiante(numeroRegistro: Int) {
     )
 
     println("---------------------------------------------")
+
     print(detalleCursos)
 
-    println("\n---------- RESUMEN ----------")
-    println("Cursos matriculados : $cantidadCursos")
-    println("Total de créditos   : $totalCreditos")
-    println("Carga académica     : $cargaAcademica")
+    println("\n---------- DATOS ACADÉMICOS ----------")
+
+    println(
+        "Cursos matriculados : $cantidadCursos"
+    )
+
+    println(
+        "Total de créditos   : $totalCreditos"
+    )
+
+    println(
+        "Carga académica     : $cargaAcademica"
+    )
 
     println("\n---------- PAGO ----------")
-    println("Monto base          : S/ %.2f".format(totalPagar))
-    println("Recargo por turno   : S/ %.2f".format(recargoTurno))
-    println("Monto con turno     : S/ %.2f".format(totalConTurno))
-    println("IGV (18%%)           : S/ %.2f".format(igv))
-    println("Matrícula final     : S/ %.2f".format(matriculaFinal))
+
+    println(
+        "Matrícula           : S/ %.2f".format(
+            montoMatricula
+        )
+    )
+
+    println(
+        "Costo de cursos     : S/ %.2f".format(
+            totalCursos
+        )
+    )
+
+    println(
+        "Monto base          : S/ %.2f".format(
+            montoBase
+        )
+    )
+
+    println(
+        "Recargo por turno   : S/ %.2f".format(
+            recargoTurno
+        )
+    )
+
+    println(
+        "Monto con turno     : S/ %.2f".format(
+            totalConTurno
+        )
+    )
+
+    println(
+        "IGV (18%%)           : S/ %.2f".format(
+            igv
+        )
+    )
+
+    println(
+        "TOTAL FINAL         : S/ %.2f".format(
+            totalFinal
+        )
+    )
 
     println("================================")
 }
@@ -191,58 +264,97 @@ fun registrarEstudiante(numeroRegistro: Int) {
 fun main() {
 
     println("================================")
-    println("       SISTEMA DE MATRÍCULA")
+    println("        SISTEMA DE MATRÍCULA")
     println("================================")
 
     val aforoMaximo =
-        leerEnteroPositivo("Ingrese el aforo máximo: ")
+        leerEnteroPositivo(
+            "Ingrese el aforo máximo: "
+        )
 
     var estudiantesRegistrados = 0
 
     while (true) {
 
-        if (estudiantesRegistrados >= aforoMaximo) {
+        if (
+            estudiantesRegistrados >= aforoMaximo
+        ) {
 
             println("\n================================")
             println("          AFORO COMPLETO")
             println("================================")
-            println("Capacidad máxima       : $aforoMaximo")
-            println("Estudiantes registrados: $estudiantesRegistrados")
-            println("No se pueden registrar más estudiantes.")
+
+            println(
+                "Capacidad máxima       : $aforoMaximo"
+            )
+
+            println(
+                "Estudiantes registrados: $estudiantesRegistrados"
+            )
+
+            println(
+                "No se pueden registrar más estudiantes."
+            )
+
             println("================================")
 
             break
         }
 
-        registrarEstudiante(estudiantesRegistrados + 1)
+        registrarEstudiante(
+            estudiantesRegistrados + 1
+        )
 
         estudiantesRegistrados++
 
-        println("\nAforo: $estudiantesRegistrados / $aforoMaximo")
+        println(
+            "\nAforo actual: " +
+                    "$estudiantesRegistrados / $aforoMaximo"
+        )
 
-        println("\n¿Desea registrar otro estudiante?")
+        if (
+            estudiantesRegistrados >= aforoMaximo
+        ) {
+            continue
+        }
+
+        println(
+            "\n¿Desea registrar otro estudiante?"
+        )
+
         println("1. Sí")
         println("0. No")
-        print("Opción: ")
+        print("Seleccione una opción: ")
 
         var opcion: String
 
         while (true) {
+
             opcion = readln().trim()
 
-            if (opcion == "1" || opcion == "0") {
+            if (
+                opcion == "1" ||
+                opcion == "0"
+            ) {
                 break
             }
 
-            print("Opción no válida. Ingresa 1 para continuar o 0 para salir: ")
+            print(
+                "Opción no válida. " +
+                        "Ingresa 1 para continuar " +
+                        "o 0 para salir: "
+            )
         }
 
         if (opcion == "0") {
+
             println("\nRegistro finalizado.")
+
             println(
                 "Estudiantes registrados: " +
                         "$estudiantesRegistrados / $aforoMaximo"
             )
+
             break
         }
     }
