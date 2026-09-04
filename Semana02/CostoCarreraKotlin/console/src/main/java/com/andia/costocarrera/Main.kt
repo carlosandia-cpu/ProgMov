@@ -50,14 +50,17 @@ fun seleccionarCategoria(): String {
     while (true) {
 
         println("\n========== CATEGORÍA ==========")
+        println("Seleccione una opción:")
         println("1. Ordinario")
         println("2. Becado")
-        print("Seleccione una opción: ")
+        print("Opción: ")
 
-        when (readln().trim()) {
-            "1" -> return "Ordinario"
-            "2" -> return "Becado"
-            else -> println("Opción no válida. Selecciona 1 o 2.")
+        when (readln().trim().lowercase()) {
+            "1", "ordinario" -> return "Ordinario"
+            "2", "becado" -> return "Becado"
+            else -> println(
+                "Opción no válida. Ingresa 1 u Ordinario, o 2 o Becado."
+            )
         }
     }
 }
@@ -66,16 +69,26 @@ fun seleccionarTurno(): Pair<String, Double> {
     while (true) {
 
         println("\n========== TURNO ==========")
+        println("Seleccione una opción:")
         println("1. Mañana - 10% adicional")
         println("2. Tarde  - 15% adicional")
         println("3. Noche  - 20% adicional")
-        print("Seleccione una opción: ")
+        print("Opción: ")
 
-        when (readln().trim()) {
-            "1" -> return Pair("Mañana", 0.10)
-            "2" -> return Pair("Tarde", 0.15)
-            "3" -> return Pair("Noche", 0.20)
-            else -> println("Opción no válida. Selecciona 1, 2 o 3.")
+        when (readln().trim().lowercase()) {
+            "1", "mañana", "manana" ->
+                return Pair("Mañana", 0.10)
+
+            "2", "tarde" ->
+                return Pair("Tarde", 0.15)
+
+            "3", "noche" ->
+                return Pair("Noche", 0.20)
+
+            else ->
+                println(
+                    "Opción no válida. Selecciona Mañana, Tarde o Noche."
+                )
         }
     }
 }
@@ -100,9 +113,7 @@ fun registrarEstudiante(numeroRegistro: Int) {
 
     } else {
 
-        println("\nEstudiante becado.")
-        println("Monto de matrícula: S/ 0.00")
-
+        println("Monto de matrícula para becado: S/ 0.00")
         0.0
     }
 
@@ -157,13 +168,18 @@ fun registrarEstudiante(numeroRegistro: Int) {
     val totalConTurno =
         montoBase + recargoTurno
 
-    // IGV 18%
+    // IGV
     val igv =
         totalConTurno * 0.18
 
     // TOTAL FINAL
     val totalFinal =
         totalConTurno + igv
+
+    // CUOTAS
+    val cantidadCuotas = 2
+    val montoCuota =
+        totalFinal / cantidadCuotas
 
     // CARGA ACADÉMICA
     val cargaAcademica = when {
@@ -202,17 +218,9 @@ fun registrarEstudiante(numeroRegistro: Int) {
 
     println("\n---------- DATOS ACADÉMICOS ----------")
 
-    println(
-        "Cursos matriculados : $cantidadCursos"
-    )
-
-    println(
-        "Total de créditos   : $totalCreditos"
-    )
-
-    println(
-        "Carga académica     : $cargaAcademica"
-    )
+    println("Cursos matriculados : $cantidadCursos")
+    println("Total de créditos   : $totalCreditos")
+    println("Carga académica     : $cargaAcademica")
 
     println("\n---------- PAGO ----------")
 
@@ -258,6 +266,18 @@ fun registrarEstudiante(numeroRegistro: Int) {
         )
     )
 
+    println("\n---------- CUOTAS ----------")
+
+    println(
+        "Forma de pago       : $cantidadCuotas cuotas"
+    )
+
+    println(
+        "Monto por cuota     : S/ %.2f".format(
+            montoCuota
+        )
+    )
+
     println("================================")
 }
 
@@ -276,26 +296,14 @@ fun main() {
 
     while (true) {
 
-        if (
-            estudiantesRegistrados >= aforoMaximo
-        ) {
+        if (estudiantesRegistrados >= aforoMaximo) {
 
             println("\n================================")
             println("          AFORO COMPLETO")
             println("================================")
-
-            println(
-                "Capacidad máxima       : $aforoMaximo"
-            )
-
-            println(
-                "Estudiantes registrados: $estudiantesRegistrados"
-            )
-
-            println(
-                "No se pueden registrar más estudiantes."
-            )
-
+            println("Capacidad máxima       : $aforoMaximo")
+            println("Estudiantes registrados: $estudiantesRegistrados")
+            println("No se pueden registrar más estudiantes.")
             println("================================")
 
             break
@@ -312,41 +320,42 @@ fun main() {
                     "$estudiantesRegistrados / $aforoMaximo"
         )
 
-        if (
-            estudiantesRegistrados >= aforoMaximo
-        ) {
+        if (estudiantesRegistrados >= aforoMaximo) {
             continue
         }
 
-        println(
-            "\n¿Desea registrar otro estudiante?"
-        )
-
+        println("\n¿Desea registrar otro estudiante?")
+        println("Seleccione una opción:")
         println("1. Sí")
         println("0. No")
-        print("Seleccione una opción: ")
+        print("Opción: ")
 
         var opcion: String
 
         while (true) {
 
-            opcion = readln().trim()
+            opcion = readln().trim().lowercase()
 
             if (
                 opcion == "1" ||
-                opcion == "0"
+                opcion == "sí" ||
+                opcion == "si" ||
+                opcion == "0" ||
+                opcion == "no"
             ) {
                 break
             }
 
             print(
-                "Opción no válida. " +
-                        "Ingresa 1 para continuar " +
-                        "o 0 para salir: "
+                "Opción no válida. Ingresa 1 o Sí para continuar, " +
+                        "0 o No para finalizar: "
             )
         }
 
-        if (opcion == "0") {
+        if (
+            opcion == "0" ||
+            opcion == "no"
+        ) {
 
             println("\nRegistro finalizado.")
 
