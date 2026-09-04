@@ -1,15 +1,77 @@
 package com.andia.costocarrera
 
+fun leerTextoValido(mensaje: String): String {
+    while (true) {
+        print(mensaje)
+        val texto = readln().trim()
+
+        if (texto.isNotEmpty() && texto.any { it.isLetter() } && texto.none { it.isDigit() }) {
+            return texto
+        }
+
+        println("Entrada no válida. Ingresa un texto válido sin números.")
+    }
+}
+
+fun leerEnteroPositivo(mensaje: String): Int {
+    while (true) {
+        print(mensaje)
+
+        val entrada = readln().trim()
+        val numero = entrada.toIntOrNull()
+
+        if (numero != null && numero > 0) {
+            return numero
+        }
+
+        println("Entrada no válida. Ingresa un número entero mayor que 0.")
+    }
+}
+
+fun leerDoublePositivo(mensaje: String): Double {
+    while (true) {
+        print(mensaje)
+
+        val numero = readln().toDoubleOrNull()
+
+        if (numero != null && numero > 0) {
+            return numero
+        }
+
+        println("Entrada no válida. Ingresa un valor numérico mayor que 0.")
+    }
+}
+
+fun seleccionarTurno(): Pair<String, Double> {
+
+    while (true) {
+
+        println("\nSeleccione el turno:")
+        println("1. Mañana - 10% adicional")
+        println("2. Tarde - 15% adicional")
+        println("3. Noche - 20% adicional")
+
+        print("Opción: ")
+
+        when (readln()) {
+            "1" -> return Pair("Mañana", 0.10)
+            "2" -> return Pair("Tarde", 0.15)
+            "3" -> return Pair("Noche", 0.20)
+            else -> println("Opción no válida. Selecciona 1, 2 o 3.")
+        }
+    }
+}
+
 fun main() {
 
-    print("Nombre del estudiante: ")
-    val nombreEstudiante = readln()
+    val nombreEstudiante =
+        leerTextoValido("Nombre del estudiante: ")
 
-    print("Cantidad de cursos: ")
-    val cantidadCursos = readln().toInt()
+    val cantidadCursos =
+        leerEnteroPositivo("Cantidad de cursos: ")
 
-    print("Valor de cada credito: ")
-    val valorCredito = readln().toDouble()
+    val valorCredito =
+        leerDoublePositivo("Valor de cada crédito: ")
 
     var totalCreditos = 0
     var totalPagar = 0.0
@@ -19,11 +81,11 @@ fun main() {
 
         println("\nCurso $i")
 
-        print("Nombre del curso: ")
-        val nombreCurso = readln()
+        val nombreCurso =
+            leerTextoValido("Nombre del curso: ")
 
-        print("Cantidad de creditos: ")
-        val creditos = readln().toInt()
+        val creditos =
+            leerEnteroPositivo("Cantidad de créditos: ")
 
         val costoCurso = creditos * valorCredito
 
@@ -37,39 +99,30 @@ fun main() {
         )
     }
 
+    val (turno, porcentajeTurno) = seleccionarTurno()
+
+    val recargoTurno = totalPagar * porcentajeTurno
+    val totalConTurno = totalPagar + recargoTurno
+
     val cargaAcademica = when {
         totalCreditos <= 12 -> "M.R (Malla Regular)"
         totalCreditos <= 18 -> "Carga Completa"
-        else -> "Requiere Autorizacion"
+        else -> "Sobrecarga Académica"
     }
 
-    val cantidadCuotas = if (totalPagar > 2500) {
-        3
-    } else {
-        2
-    }
-
-    val montoCuota = totalPagar / cantidadCuotas
-
-    println("\n==============================================")
-    println("           RESULTADO DE MATRICULA")
-    println("==============================================")
+    println("\n========== MATRÍCULA ==========")
     println("Estudiante: $nombreEstudiante")
     println()
-
-    println("%-20s %-10s %-10s".format("Curso", "Creditos", "Costo"))
-    println("----------------------------------------------")
-
+    println("%-20s %-10s %-15s".format("Curso", "Créditos", "Costo"))
+    println("---------------------------------------------")
     print(detalleCursos)
 
-    println("----------------------------------------------")
-    println("RESUMEN")
-    println("----------------------------------------------")
-    println("Cursos matriculados: $cantidadCursos")
-    println("Total de creditos: $totalCreditos")
-    println("Total a pagar: S/ %.2f".format(totalPagar))
-    println("Carga academica: $cargaAcademica")
-    println(
-        "Forma de pago: $cantidadCuotas cuotas de S/ %.2f".format(montoCuota)
-    )
+    println("\nCursos matriculados: $cantidadCursos")
+    println("Total de créditos: $totalCreditos")
+    println("Carga académica: $cargaAcademica")
+
+    println("\nTurno seleccionado: $turno")
+    println("Monto base: S/ %.2f".format(totalPagar))
+    println("Recargo por turno: S/ %.2f".format(recargoTurno))
+    println("Total con turno: S/ %.2f".format(totalConTurno))
 }
