@@ -89,7 +89,6 @@ fun main() {
 
     val categoria = seleccionarCategoria()
 
-    // Si el estudiante es becado, su matrícula es S/ 0.00
     if (categoria == "Becado") {
 
         println("\n================================")
@@ -103,7 +102,6 @@ fun main() {
         return
     }
 
-    // Solo los estudiantes ordinarios continúan con el cálculo
     val (turno, porcentajeTurno) = seleccionarTurno()
 
     println("\n========== DATOS ACADÉMICOS ==========")
@@ -141,7 +139,10 @@ fun main() {
     }
 
     val recargoTurno = totalPagar * porcentajeTurno
-    val matriculaFinal = totalPagar + recargoTurno
+    val totalConTurno = totalPagar + recargoTurno
+
+    val igv = totalConTurno * 0.18
+    val matriculaFinal = totalConTurno + igv
 
     val cargaAcademica = when {
         totalCreditos <= 12 -> "M.R (Malla Regular)"
@@ -158,11 +159,13 @@ fun main() {
     println("Turno      : $turno")
 
     println("\n---------- CURSOS ----------")
-    println("%-20s %-10s %-15s".format(
-        "Curso",
-        "Créditos",
-        "Costo"
-    ))
+    println(
+        "%-20s %-10s %-15s".format(
+            "Curso",
+            "Créditos",
+            "Costo"
+        )
+    )
 
     println("---------------------------------------------")
     print(detalleCursos)
@@ -175,6 +178,8 @@ fun main() {
     println("\n---------- PAGO ----------")
     println("Monto base          : S/ %.2f".format(totalPagar))
     println("Recargo por turno   : S/ %.2f".format(recargoTurno))
+    println("Monto con turno     : S/ %.2f".format(totalConTurno))
+    println("IGV (18%%)           : S/ %.2f".format(igv))
     println("Matrícula final     : S/ %.2f".format(matriculaFinal))
 
     println("================================")
