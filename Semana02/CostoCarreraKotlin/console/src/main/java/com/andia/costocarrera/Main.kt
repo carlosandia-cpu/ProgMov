@@ -5,7 +5,8 @@ fun leerTextoValido(mensaje: String): String {
         print(mensaje)
         val texto = readln().trim()
 
-        if (texto.isNotEmpty() &&
+        if (
+            texto.isNotEmpty() &&
             texto.any { it.isLetter() } &&
             texto.none { it.isDigit() }
         ) {
@@ -78,10 +79,10 @@ fun seleccionarTurno(): Pair<String, Double> {
     }
 }
 
-fun main() {
+fun registrarEstudiante(numeroRegistro: Int) {
 
-    println("================================")
-    println("       COSTO DE MATRÍCULA")
+    println("\n================================")
+    println("       REGISTRO N° $numeroRegistro")
     println("================================")
 
     val nombreEstudiante =
@@ -97,6 +98,7 @@ fun main() {
         println("Estudiante : $nombreEstudiante")
         println("Categoría  : $categoria")
         println("Matrícula  : S/ 0.00")
+        println("IGV        : S/ 0.00")
         println("================================")
 
         return
@@ -159,6 +161,7 @@ fun main() {
     println("Turno      : $turno")
 
     println("\n---------- CURSOS ----------")
+
     println(
         "%-20s %-10s %-15s".format(
             "Curso",
@@ -183,4 +186,64 @@ fun main() {
     println("Matrícula final     : S/ %.2f".format(matriculaFinal))
 
     println("================================")
+}
+
+fun main() {
+
+    println("================================")
+    println("       SISTEMA DE MATRÍCULA")
+    println("================================")
+
+    val aforoMaximo =
+        leerEnteroPositivo("Ingrese el aforo máximo: ")
+
+    var estudiantesRegistrados = 0
+
+    while (true) {
+
+        if (estudiantesRegistrados >= aforoMaximo) {
+
+            println("\n================================")
+            println("          AFORO COMPLETO")
+            println("================================")
+            println("Capacidad máxima       : $aforoMaximo")
+            println("Estudiantes registrados: $estudiantesRegistrados")
+            println("No se pueden registrar más estudiantes.")
+            println("================================")
+
+            break
+        }
+
+        registrarEstudiante(estudiantesRegistrados + 1)
+
+        estudiantesRegistrados++
+
+        println("\nAforo: $estudiantesRegistrados / $aforoMaximo")
+
+        println("\n¿Desea registrar otro estudiante?")
+        println("1. Sí")
+        println("0. No")
+        print("Opción: ")
+
+        var opcion: String
+
+        while (true) {
+            opcion = readln().trim()
+
+            if (opcion == "1" || opcion == "0") {
+                break
+            }
+
+            print("Opción no válida. Ingresa 1 para continuar o 0 para salir: ")
+        }
+
+        if (opcion == "0") {
+            println("\nRegistro finalizado.")
+            println(
+                "Estudiantes registrados: " +
+                        "$estudiantesRegistrados / $aforoMaximo"
+            )
+            break
+        }
+    }
 }
