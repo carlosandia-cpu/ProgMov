@@ -83,6 +83,32 @@ fun RegistroNotasApp() {
         mutableStateOf(false)
     }
 
+    var calculado by remember {
+        mutableStateOf(false)
+    }
+
+    // PROMEDIO PONDERADO
+    val promedioPonderado =
+        notaFundamentos.toDouble() * 0.20 +
+                notaPoo.toDouble() * 0.25 +
+                notaMoviles.toDouble() * 0.30 +
+                notaBaseDatos.toDouble() * 0.25
+
+    // PROMEDIO FINAL
+    val promedioFinal = if (redondearPromedio) {
+        promedioPonderado.roundToInt().toDouble()
+    } else {
+        promedioPonderado
+    }
+
+    // OBSERVACIÓN
+    val observacion = when {
+        promedioFinal >= 17 -> "EXCELENTE"
+        promedioFinal >= 13 -> "APROBADO"
+        promedioFinal >= 10 -> "EN RECUPERACIÓN"
+        else -> "DESAPROBADO"
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -145,6 +171,8 @@ fun RegistroNotasApp() {
                     onNotaChange = {
                         notaFundamentos =
                             it.roundToInt().toFloat()
+
+                        calculado = false
                     }
                 )
 
@@ -155,6 +183,8 @@ fun RegistroNotasApp() {
                     onNotaChange = {
                         notaPoo =
                             it.roundToInt().toFloat()
+
+                        calculado = false
                     }
                 )
 
@@ -165,6 +195,8 @@ fun RegistroNotasApp() {
                     onNotaChange = {
                         notaMoviles =
                             it.roundToInt().toFloat()
+
+                        calculado = false
                     }
                 )
 
@@ -175,6 +207,8 @@ fun RegistroNotasApp() {
                     onNotaChange = {
                         notaBaseDatos =
                             it.roundToInt().toFloat()
+
+                        calculado = false
                     }
                 )
 
@@ -197,6 +231,7 @@ fun RegistroNotasApp() {
                         checked = redondearPromedio,
                         onCheckedChange = {
                             redondearPromedio = it
+                            calculado = false
                         }
                     )
                 }
@@ -210,6 +245,10 @@ fun RegistroNotasApp() {
                         checked = notasConfirmadas,
                         onCheckedChange = {
                             notasConfirmadas = it
+
+                            if (!it) {
+                                calculado = false
+                            }
                         }
                     )
 
@@ -224,7 +263,7 @@ fun RegistroNotasApp() {
 
                 Button(
                     onClick = {
-                        // El cálculo se agregará en el siguiente commit.
+                        calculado = true
                     },
                     enabled = notasConfirmadas,
                     modifier = Modifier
@@ -242,13 +281,55 @@ fun RegistroNotasApp() {
                     modifier = Modifier.height(18.dp)
                 )
 
-                Text(
-                    text = "Asigna las notas y confirma para calcular.",
-                    color = Color.Gray,
-                    modifier = Modifier.align(
-                        Alignment.CenterHorizontally
+                if (!calculado) {
+
+                    Text(
+                        text = "Asigna las notas y confirma para calcular.",
+                        color = Color.Gray,
+                        modifier = Modifier.align(
+                            Alignment.CenterHorizontally
+                        )
                     )
-                )
+
+                } else {
+
+                    Text(
+                        text = "Promedio ponderado: %.2f"
+                            .format(promedioPonderado),
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
+
+                    if (redondearPromedio) {
+
+                        Text(
+                            text = "Promedio final: " +
+                                    "${promedioFinal.toInt()} " +
+                                    "(redondeado)",
+                            fontWeight = FontWeight.Bold
+                        )
+
+                    } else {
+
+                        Text(
+                            text = "Promedio final: %.2f"
+                                .format(promedioFinal),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
+
+                    Text(
+                        text = "Observación: $observacion",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
                 Spacer(
                     modifier = Modifier.height(30.dp)
