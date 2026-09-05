@@ -17,6 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
@@ -109,8 +112,17 @@ fun RegistroNotasApp() {
         else -> "DESAPROBADO"
     }
 
+    // COLOR DE LA OBSERVACIÓN
+    val colorObservacion = when (observacion) {
+        "EXCELENTE" -> Color(0xFF1B5E20)
+        "APROBADO" -> Color(0xFF388E3C)
+        "EN RECUPERACIÓN" -> Color(0xFFFFA000)
+        else -> Color(0xFFD32F2F)
+    }
+
     Scaffold(
         topBar = {
+
             TopAppBar(
                 title = {
                     Text(
@@ -123,7 +135,27 @@ fun RegistroNotasApp() {
                     titleContentColor = Color.White
                 )
             )
+        },
+
+        bottomBar = {
+
+            Surface(
+                color = Color.White,
+                shadowElevation = 4.dp
+            ) {
+
+                Text(
+                    text = "Desarrollado por: Carlos Andia",
+                    color = Color.Gray,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                )
+            }
         }
+
     ) { paddingValues ->
 
         Box(
@@ -169,6 +201,7 @@ fun RegistroNotasApp() {
                     peso = "20%",
                     nota = notaFundamentos,
                     onNotaChange = {
+
                         notaFundamentos =
                             it.roundToInt().toFloat()
 
@@ -181,6 +214,7 @@ fun RegistroNotasApp() {
                     peso = "25%",
                     nota = notaPoo,
                     onNotaChange = {
+
                         notaPoo =
                             it.roundToInt().toFloat()
 
@@ -193,6 +227,7 @@ fun RegistroNotasApp() {
                     peso = "30%",
                     nota = notaMoviles,
                     onNotaChange = {
+
                         notaMoviles =
                             it.roundToInt().toFloat()
 
@@ -205,6 +240,7 @@ fun RegistroNotasApp() {
                     peso = "25%",
                     nota = notaBaseDatos,
                     onNotaChange = {
+
                         notaBaseDatos =
                             it.roundToInt().toFloat()
 
@@ -218,8 +254,10 @@ fun RegistroNotasApp() {
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment =
+                        Alignment.CenterVertically,
+                    horizontalArrangement =
+                        Arrangement.SpaceBetween
                 ) {
 
                     Text(
@@ -230,6 +268,7 @@ fun RegistroNotasApp() {
                     Switch(
                         checked = redondearPromedio,
                         onCheckedChange = {
+
                             redondearPromedio = it
                             calculado = false
                         }
@@ -238,12 +277,14 @@ fun RegistroNotasApp() {
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment =
+                        Alignment.CenterVertically
                 ) {
 
                     Checkbox(
                         checked = notasConfirmadas,
                         onCheckedChange = {
+
                             notasConfirmadas = it
 
                             if (!it) {
@@ -253,7 +294,8 @@ fun RegistroNotasApp() {
                     )
 
                     Text(
-                        text = "Confirmo que las notas son correctas"
+                        text =
+                            "Confirmo que las notas son correctas"
                     )
                 }
 
@@ -278,70 +320,129 @@ fun RegistroNotasApp() {
                 }
 
                 Spacer(
-                    modifier = Modifier.height(18.dp)
+                    modifier = Modifier.height(20.dp)
                 )
 
                 if (!calculado) {
 
                     Text(
-                        text = "Asigna las notas y confirma para calcular.",
+                        text =
+                            "Asigna las notas y confirma para calcular.",
                         color = Color.Gray,
-                        modifier = Modifier.align(
-                            Alignment.CenterHorizontally
-                        )
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                 } else {
 
-                    Text(
-                        text = "Promedio ponderado: %.2f"
-                            .format(promedioPonderado),
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(8.dp)
-                    )
-
-                    if (redondearPromedio) {
-
-                        Text(
-                            text = "Promedio final: " +
-                                    "${promedioFinal.toInt()} " +
-                                    "(redondeado)",
-                            fontWeight = FontWeight.Bold
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 6.dp
+                        ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
                         )
+                    ) {
 
-                    } else {
+                        Column(
+                            modifier = Modifier.padding(20.dp)
+                        ) {
 
-                        Text(
-                            text = "Promedio final: %.2f"
-                                .format(promedioFinal),
-                            fontWeight = FontWeight.Bold
-                        )
+                            Text(
+                                text = "Resultado",
+                                fontSize = 21.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(14.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "Promedio ponderado: %.2f"
+                                        .format(
+                                            promedioPonderado
+                                        ),
+                                fontSize = 17.sp
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(8.dp)
+                            )
+
+                            if (redondearPromedio) {
+
+                                Text(
+                                    text =
+                                        "Promedio final: " +
+                                                "${promedioFinal.toInt()} " +
+                                                "(redondeado)",
+                                    fontSize = 18.sp,
+                                    fontWeight =
+                                        FontWeight.Bold
+                                )
+
+                            } else {
+
+                                Text(
+                                    text =
+                                        "Promedio final: %.2f"
+                                            .format(
+                                                promedioFinal
+                                            ),
+                                    fontSize = 18.sp,
+                                    fontWeight =
+                                        FontWeight.Bold
+                                )
+                            }
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(16.dp)
+                            )
+
+                            Surface(
+                                color = colorObservacion,
+                                shape =
+                                    RoundedCornerShape(50.dp)
+                            ) {
+
+                                Text(
+                                    text = observacion,
+                                    color = Color.White,
+                                    fontWeight =
+                                        FontWeight.Bold,
+                                    modifier =
+                                        Modifier.padding(
+                                            horizontal = 18.dp,
+                                            vertical = 8.dp
+                                        )
+                                )
+                            }
+                        }
                     }
 
                     Spacer(
-                        modifier = Modifier.height(8.dp)
+                        modifier = Modifier.height(14.dp)
                     )
 
                     Text(
-                        text = "Observación: $observacion",
-                        fontWeight = FontWeight.Bold
+                        text =
+                            "✓ Promedio calculado correctamente",
+                        color = Color(0xFF2E7D32),
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
                 Spacer(
-                    modifier = Modifier.height(30.dp)
-                )
-
-                Text(
-                    text = "Desarrollado por: Carlos Andia",
-                    color = Color.Gray,
-                    fontSize = 13.sp,
-                    modifier = Modifier.align(
-                        Alignment.CenterHorizontally
-                    )
+                    modifier = Modifier.height(24.dp)
                 )
             }
         }
