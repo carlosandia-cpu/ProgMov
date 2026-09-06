@@ -178,7 +178,7 @@ fun PantallaRegistro(
 
         if (mostrarError) {
             Text(
-                text = "⚠ Completa todos los campos antes de agregar",
+                text = "⚠ Debes llenar todos los campos",
                 color = Color.Red
             )
         }
