@@ -1,11 +1,54 @@
-# Lab04 - Carrito TECSUP
+# Laboratorio 04 - Mi Carrito TECSUP
 
-Aplicación Android desarrollada con Kotlin y Jetpack Compose para registrar productos en una lista observable y calcular los totales de un carrito de compras.
+## Autor
 
-## Pregunta de la Etapa 1
+Carlos Andia
 
-### ¿Por qué la lista se declara con `val` y aun así podemos agregarle elementos?
+## Descripción
 
-La variable se declara con `val` porque la referencia a la lista no será reemplazada por otra lista. Sin embargo, `mutableStateListOf` crea una colección mutable, por lo que su contenido sí puede modificarse agregando o eliminando productos.
+Aplicación móvil desarrollada en Kotlin utilizando Jetpack Compose. Permite registrar productos indicando su nombre, precio y cantidad, mostrarlos dentro de una lista dinámica y eliminarlos mediante un botón.
 
-Además, Jetpack Compose observa los cambios realizados en esta lista y actualiza automáticamente los componentes de la interfaz que dependen de ella.
+La aplicación calcula automáticamente el subtotal, el IGV del 18% y el total del carrito.
+
+## Funcionalidades
+
+- Registro del nombre del producto.
+- Registro del precio y cantidad.
+- Validación de campos antes de agregar.
+- Lista dinámica de productos con `LazyColumn`.
+- Tarjetas individuales mediante `TarjetaProducto`.
+- Cálculo del importe por producto.
+- Eliminación de productos.
+- Cálculo automático del subtotal.
+- Cálculo del IGV del 18%.
+- Cálculo del total.
+- Estado vacío centrado mediante `Box`.
+- Panel de totales fijo en la parte inferior.
+
+## Capturas de la aplicación
+
+### Estado vacío
+
+![img_1.png](img_1.png)
+
+### Carrito con productos
+
+![img_2.png](img_2.png)
+
+## Preguntas conceptuales
+
+### 1. ¿Por qué se utiliza `mutableStateListOf` y no una `MutableList` normal?
+
+Se utiliza `mutableStateListOf` porque es una lista observable por Jetpack Compose. Cuando se agrega o elimina un producto, Compose detecta el cambio y actualiza automáticamente los elementos mostrados en la pantalla.
+
+Una `MutableList` normal permite modificar sus elementos, pero Compose no detecta automáticamente esos cambios y la interfaz podría no actualizarse.
+
+### 2. ¿Por qué la lista se declara con `val` si podemos agregarle elementos?
+
+La variable se declara con `val` porque la referencia a la lista no será reemplazada por otra lista. Sin embargo, el contenido del objeto continúa siendo mutable.
+
+Por eso podemos utilizar operaciones como:
+
+```kotlin
+productos.add(producto)
+productos.remove(producto)
