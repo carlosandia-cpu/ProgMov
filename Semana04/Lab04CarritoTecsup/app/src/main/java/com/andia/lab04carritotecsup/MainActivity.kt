@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -72,7 +74,9 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
-            label = { Text("Nombre del producto") },
+            label = {
+                Text("Nombre del producto")
+            },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -84,7 +88,9 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
             OutlinedTextField(
                 value = precio,
                 onValueChange = { precio = it },
-                label = { Text("Precio (S/)") },
+                label = {
+                    Text("Precio (S/)")
+                },
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal
@@ -95,7 +101,9 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
             OutlinedTextField(
                 value = cantidad,
                 onValueChange = { cantidad = it },
-                label = { Text("Cantidad") },
+                label = {
+                    Text("Cantidad")
+                },
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
@@ -135,5 +143,20 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
         Text(
             text = "Productos: ${productos.size}"
         )
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(productos) { producto ->
+                Text(
+                    text = "${producto.nombre} - S/ %.2f".format(
+                        producto.precio * producto.cantidad
+                    )
+                )
+            }
+        }
     }
 }
