@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.tecsupfit.screens.HomeScreen
+import com.example.tecsupfit.navigation.AppNavigation
 import com.example.tecsupfit.ui.theme.TecsupFitTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TecsupFitTheme {
-                HomeScreen()
+                AppNavigation()
             }
         }
     }
