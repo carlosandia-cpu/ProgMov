@@ -7,6 +7,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.tecsupfit.data.clasesDisponibles
+import com.example.tecsupfit.data.obtenerHorarios
+import com.example.tecsupfit.screens.ConfirmationScreen
 import com.example.tecsupfit.screens.DetailScreen
 import com.example.tecsupfit.screens.HomeScreen
 
@@ -21,9 +23,7 @@ fun AppNavigation() {
         composable(route = "home") {
             HomeScreen(
                 onClaseClick = { clase ->
-                    navController.navigate(
-                        route = "detalle/${clase.id}"
-                    )
+                    navController.navigate("detalle/${clase.id}")
                 }
             )
         }
@@ -40,15 +40,62 @@ fun AppNavigation() {
             val claseId = backStackEntry.arguments
                 ?.getInt("claseId")
 
-            val claseSeleccionada = clasesDisponibles.find { clase ->
-                clase.id == claseId
+            val claseSeleccionada = clasesDisponibles.find {
+                it.id == claseId
             }
 
-            if (claseSeleccionada != null) {
+            claseSeleccionada?.let { clase ->
                 DetailScreen(
-                    clase = claseSeleccionada,
-                    onBack = {
+                    clase = clase,
+                    onVolver = {
                         navController.popBackStack()
+                    },
+                    onReservar = { horarioIndice ->
+                        navController.navigate(
+                            "confirmacion/${clase.id}/$horarioIndice"
+                        )
+                    }
+                )
+            }
+        }
+
+        composable(
+            route = "confirmacion/{claseId}/{horarioIndice}",
+            arguments = listOf(
+                navArgument("claseId") {
+                    type = NavType.IntType
+                },
+                navArgument("horarioIndice") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+
+            val claseId = backStackEntry.arguments
+                ?.getInt("claseId")
+
+            val horarioIndice = backStackEntry.arguments
+                ?.getInt("horarioIndice") ?: 0
+
+            val claseSeleccionada = clasesDisponibles.find {
+                it.id == claseId
+            }
+
+            claseSeleccionada?.let { clase ->
+                val horarios = obtenerHorarios(clase)
+                val horarioSeleccionado =
+                    horarios.getOrElse(horarioIndice) { clase.horario }
+
+                ConfirmationScreen(
+                    clase = clase,
+                    horarioSeleccionado = horarioSeleccionado,
+                    onVerReservas = {
+                        navController.navigate("home") {
+                            popUpTo("home") {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
