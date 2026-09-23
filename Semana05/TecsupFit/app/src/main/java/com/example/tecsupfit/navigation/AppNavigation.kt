@@ -75,7 +75,10 @@ fun AppNavigation() {
 
             composable(route = "reservas") {
                 ReservationsScreen(
-                    reservas = reservas
+                    reservas = reservas,
+                    onCancelarReserva = { reserva ->
+                        reservas.remove(reserva)
+                    }
                 )
             }
 
@@ -187,4 +190,3 @@ fun AppNavigation() {
         }
     }
 }
-
