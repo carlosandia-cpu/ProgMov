@@ -37,6 +37,20 @@ class MainActivity : ComponentActivity() {
                 var fechaConfirmada by remember { mutableStateOf("") }
                 var horaConfirmada by remember { mutableStateOf("") }
 
+                // Una cita completada sirve para mostrar el segundo estado.
+                var citas by remember {
+                    mutableStateOf(
+                        listOf(
+                            Cita(
+                                medico = medicos[1],
+                                fecha = "Mar 22",
+                                hora = "3:00 p. m.",
+                                estado = "Completada"
+                            )
+                        )
+                    )
+                }
+
                 val drawer = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
@@ -117,6 +131,13 @@ class MainActivity : ComponentActivity() {
                                     onConfirmar = { fecha, hora ->
                                         fechaConfirmada = fecha
                                         horaConfirmada = hora
+
+                                        citas = citas + Cita(
+                                            medico = medico,
+                                            fecha = fecha,
+                                            hora = hora
+                                        )
+
                                         pantalla = Pantalla.CONFIRMACION
                                     }
                                 )
@@ -137,17 +158,19 @@ class MainActivity : ComponentActivity() {
                         }
 
                         Pantalla.MIS_CITAS -> {
-                            PantallaSeccion(
+                            PantallaMisCitas(
                                 titulo = "Mis citas",
-                                contenido = "Aquí aparecerán tus citas agendadas.",
+                                citas = citas,
                                 onAbrirMenu = abrirMenu
                             )
                         }
 
                         Pantalla.HISTORIAL -> {
-                            PantallaSeccion(
+                            PantallaMisCitas(
                                 titulo = "Historial médico",
-                                contenido = "Aquí podrás consultar las citas completadas.",
+                                citas = citas.filter {
+                                    it.estado == "Completada"
+                                },
                                 onAbrirMenu = abrirMenu
                             )
                         }
