@@ -22,8 +22,13 @@ import kotlinx.coroutines.launch
 import pe.tecsup.clinicasaludplus.ui.theme.ClinicaSaludPlusTheme
 
 private enum class Pantalla {
-    INICIO, PERFIL_MEDICO, AGENDAR, CONFIRMACION,
-    MIS_CITAS, HISTORIAL, PERFIL_PACIENTE
+    INICIO,
+    PERFIL_MEDICO,
+    AGENDAR,
+    CONFIRMACION,
+    MIS_CITAS,
+    HISTORIAL,
+    PERFIL_PACIENTE
 }
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +42,7 @@ class MainActivity : ComponentActivity() {
                 var fechaConfirmada by remember { mutableStateOf("") }
                 var horaConfirmada by remember { mutableStateOf("") }
 
-                // Una cita completada sirve para mostrar el segundo estado.
+                // Cita de ejemplo para mostrar el estado "Completada".
                 var citas by remember {
                     mutableStateOf(
                         listOf(
@@ -54,7 +59,9 @@ class MainActivity : ComponentActivity() {
                 val drawer = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
-                BackHandler(enabled = pantalla != Pantalla.INICIO || drawer.isOpen) {
+                BackHandler(
+                    enabled = pantalla != Pantalla.INICIO || drawer.isOpen
+                ) {
                     if (drawer.isOpen) {
                         scope.launch { drawer.close() }
                     } else {
@@ -95,7 +102,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) {
-                    val abrirMenu = {
+                    val abrirMenu: () -> Unit = {
                         scope.launch { drawer.open() }
                         Unit
                     }
@@ -115,8 +122,12 @@ class MainActivity : ComponentActivity() {
                             medicoSeleccionado?.let { medico ->
                                 PantallaPerfilMedico(
                                     medico = medico,
-                                    onVolver = { pantalla = Pantalla.INICIO },
-                                    onAgendar = { pantalla = Pantalla.AGENDAR }
+                                    onVolver = {
+                                        pantalla = Pantalla.INICIO
+                                    },
+                                    onAgendar = {
+                                        pantalla = Pantalla.AGENDAR
+                                    }
                                 )
                             }
                         }
@@ -150,6 +161,9 @@ class MainActivity : ComponentActivity() {
                                     medico = medico,
                                     fecha = fechaConfirmada,
                                     hora = horaConfirmada,
+                                    onVerCitas = {
+                                        pantalla = Pantalla.MIS_CITAS
+                                    },
                                     onVolverInicio = {
                                         pantalla = Pantalla.INICIO
                                     }
@@ -168,8 +182,8 @@ class MainActivity : ComponentActivity() {
                         Pantalla.HISTORIAL -> {
                             PantallaMisCitas(
                                 titulo = "Historial médico",
-                                citas = citas.filter {
-                                    it.estado == "Completada"
+                                citas = citas.filter { cita ->
+                                    cita.estado == "Completada"
                                 },
                                 onAbrirMenu = abrirMenu
                             )
