@@ -26,6 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +40,18 @@ fun PantallaAgendarCita(
     var fechaElegida by remember { mutableStateOf<String?>(null) }
     var horaElegida by remember { mutableStateOf<String?>(null) }
 
-    val fechas = listOf("Jue 26", "Vie 27", "Sáb 28")
+    val fechas = remember {
+        val localeEs = Locale.forLanguageTag("es-ES")
+        val formatter = SimpleDateFormat("EEE d", localeEs)
+        (0..2).map { offset ->
+            val calendar = Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_YEAR, offset)
+            }
+            formatter.format(calendar.time)
+                .replace(".", "")
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(localeEs) else it.toString() }
+        }
+    }
     val horas = listOf("9:00 a. m.", "10:30 a. m.", "3:00 p. m.")
 
     Scaffold(
