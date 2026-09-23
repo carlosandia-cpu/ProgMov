@@ -1,104 +1,213 @@
 package com.example.tecsupfit.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.tecsupfit.components.BottomNavigationBar
+import com.example.tecsupfit.components.bottomDestinations
 import com.example.tecsupfit.data.clasesDisponibles
 import com.example.tecsupfit.data.obtenerHorarios
+import com.example.tecsupfit.model.Reserva
 import com.example.tecsupfit.screens.ConfirmationScreen
 import com.example.tecsupfit.screens.DetailScreen
 import com.example.tecsupfit.screens.HomeScreen
+import com.example.tecsupfit.screens.ReservationsScreen
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    NavHost(
-        navController = navController,
-        startDestination = "home"
-    ) {
-        composable(route = "home") {
-            HomeScreen(
-                onClaseClick = { clase ->
-                    navController.navigate("detalle/${clase.id}")
-                }
-            )
-        }
+    val reservas = remember {
+        mutableStateListOf<Reserva>()
+    }
 
-        composable(
-            route = "detalle/{claseId}",
-            arguments = listOf(
-                navArgument("claseId") {
-                    type = NavType.IntType
-                }
-            )
-        ) { backStackEntry ->
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
 
-            val claseId = backStackEntry.arguments
-                ?.getInt("claseId")
+    val bottomBarRoutes = bottomDestinations.map {
+        it.route
+    }
 
-            val claseSeleccionada = clasesDisponibles.find {
-                it.id == claseId
-            }
-
-            claseSeleccionada?.let { clase ->
-                DetailScreen(
-                    clase = clase,
-                    onVolver = {
-                        navController.popBackStack()
-                    },
-                    onReservar = { horarioIndice ->
-                        navController.navigate(
-                            "confirmacion/${clase.id}/$horarioIndice"
-                        )
-                    }
-                )
-            }
-        }
-
-        composable(
-            route = "confirmacion/{claseId}/{horarioIndice}",
-            arguments = listOf(
-                navArgument("claseId") {
-                    type = NavType.IntType
-                },
-                navArgument("horarioIndice") {
-                    type = NavType.IntType
-                }
-            )
-        ) { backStackEntry ->
-
-            val claseId = backStackEntry.arguments
-                ?.getInt("claseId")
-
-            val horarioIndice = backStackEntry.arguments
-                ?.getInt("horarioIndice") ?: 0
-
-            val claseSeleccionada = clasesDisponibles.find {
-                it.id == claseId
-            }
-
-            claseSeleccionada?.let { clase ->
-                val horarios = obtenerHorarios(clase)
-                val horarioSeleccionado =
-                    horarios.getOrElse(horarioIndice) { clase.horario }
-
-                ConfirmationScreen(
-                    clase = clase,
-                    horarioSeleccionado = horarioSeleccionado,
-                    onVerReservas = {
-                        navController.navigate("home") {
+    Scaffold(
+        bottomBar = {
+            if (currentRoute in bottomBarRoutes) {
+                BottomNavigationBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
                             popUpTo("home") {
-                                inclusive = false
+                                saveState = true
                             }
+
                             launchSingleTop = true
+                            restoreState = true
                         }
                     }
                 )
             }
         }
+    ) { paddingValues ->
+
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            composable(route = "home") {
+                HomeScreen(
+                    onClaseClick = { clase ->
+                        navController.navigate("detalle/${clase.id}")
+                    }
+                )
+            }
+
+            composable(route = "reservas") {
+                ReservationsScreen(
+                    reservas = reservas
+                )
+            }
+
+            composable(route = "rutinas") {
+                PantallaTemporal(
+                    titulo = "Rutinas"
+                )
+            }
+
+            composable(route = "perfil") {
+                PantallaTemporal(
+                    titulo = "Mi perfil"
+                )
+            }
+
+            composable(
+                route = "detalle/{claseId}",
+                arguments = listOf(
+                    navArgument("claseId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+
+                val claseId = backStackEntry.arguments
+                    ?.getInt("claseId")
+
+                val claseSeleccionada = clasesDisponibles.find {
+                    it.id == claseId
+                }
+
+                claseSeleccionada?.let { clase ->
+                    DetailScreen(
+                        clase = clase,
+                        onVolver = {
+                            navController.popBackStack()
+                        },
+                        onReservar = { horarioIndice ->
+
+                            val horarios = obtenerHorarios(clase)
+
+                            val horarioSeleccionado = horarios.getOrElse(
+                                horarioIndice
+                            ) {
+                                clase.horario
+                            }
+
+                            reservas.removeAll {
+                                it.clase.id == clase.id
+                            }
+
+                            reservas.add(
+                                Reserva(
+                                    clase = clase,
+                                    horario = horarioSeleccionado
+                                )
+                            )
+
+                            navController.navigate(
+                                "confirmacion/${clase.id}/$horarioIndice"
+                            )
+                        }
+                    )
+                }
+            }
+
+            composable(
+                route = "confirmacion/{claseId}/{horarioIndice}",
+                arguments = listOf(
+                    navArgument("claseId") {
+                        type = NavType.IntType
+                    },
+                    navArgument("horarioIndice") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+
+                val claseId = backStackEntry.arguments
+                    ?.getInt("claseId")
+
+                val horarioIndice = backStackEntry.arguments
+                    ?.getInt("horarioIndice") ?: 0
+
+                val claseSeleccionada = clasesDisponibles.find {
+                    it.id == claseId
+                }
+
+                claseSeleccionada?.let { clase ->
+                    val horarios = obtenerHorarios(clase)
+
+                    val horarioSeleccionado = horarios.getOrElse(
+                        horarioIndice
+                    ) {
+                        clase.horario
+                    }
+
+                    ConfirmationScreen(
+                        clase = clase,
+                        horarioSeleccionado = horarioSeleccionado,
+                        onVerReservas = {
+                            navController.navigate("reservas") {
+                                popUpTo("home") {
+                                    inclusive = false
+                                }
+
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PantallaTemporal(
+    titulo: String
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = titulo,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
