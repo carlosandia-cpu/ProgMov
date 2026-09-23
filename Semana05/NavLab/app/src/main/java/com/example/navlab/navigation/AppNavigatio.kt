@@ -9,6 +9,7 @@ import androidx.navigation.navArgument
 import com.example.navlab.screens.DetailScreen
 import com.example.navlab.screens.HomeScreen
 import com.example.navlab.screens.ListScreen
+import com.example.navlab.screens.ProfileScreen
 
 @Composable
 fun AppNavigation() {
