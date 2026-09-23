@@ -16,6 +16,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,7 +29,10 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaInicio(onMedicoClick: (Medico) -> Unit) {
+fun PantallaInicio(
+    onAbrirMenu: () -> Unit,
+    onMedicoClick: (Medico) -> Unit
+) {
     var especialidad by remember { mutableStateOf("Todas") }
 
     val especialidades = listOf(
@@ -41,7 +45,14 @@ fun PantallaInicio(onMedicoClick: (Medico) -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Clínica Salud+") })
+            TopAppBar(
+                title = { Text("Clínica Salud+") },
+                navigationIcon = {
+                    TextButton(onClick = onAbrirMenu) {
+                        Text("☰")
+                    }
+                }
+            )
         }
     ) { padding ->
         Column(
