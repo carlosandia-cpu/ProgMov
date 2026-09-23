@@ -1,18 +1,12 @@
 package com.example.tecsupfit.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,7 +21,9 @@ import com.example.tecsupfit.model.Reserva
 import com.example.tecsupfit.screens.ConfirmationScreen
 import com.example.tecsupfit.screens.DetailScreen
 import com.example.tecsupfit.screens.HomeScreen
+import com.example.tecsupfit.screens.ProfileScreen
 import com.example.tecsupfit.screens.ReservationsScreen
+import com.example.tecsupfit.screens.RoutinesScreen
 
 @Composable
 fun AppNavigation() {
@@ -84,15 +80,11 @@ fun AppNavigation() {
             }
 
             composable(route = "rutinas") {
-                PantallaTemporal(
-                    titulo = "Rutinas"
-                )
+                RoutinesScreen()
             }
 
             composable(route = "perfil") {
-                PantallaTemporal(
-                    titulo = "Mi perfil"
-                )
+                ProfileScreen()
             }
 
             composable(
@@ -196,18 +188,3 @@ fun AppNavigation() {
     }
 }
 
-@Composable
-fun PantallaTemporal(
-    titulo: String
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = titulo,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
