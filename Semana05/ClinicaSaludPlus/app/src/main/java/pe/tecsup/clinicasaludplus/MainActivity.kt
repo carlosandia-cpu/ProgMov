@@ -10,33 +10,76 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import pe.tecsup.clinicasaludplus.ui.theme.ClinicaSaludPlusTheme
 
+private enum class Pantalla {
+    INICIO, PERFIL_MEDICO, AGENDAR, CONFIRMACION
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             ClinicaSaludPlusTheme {
-                var medicoSeleccionado by remember {
-                    mutableStateOf<Medico?>(null)
+                var pantalla by remember { mutableStateOf(Pantalla.INICIO) }
+                var medicoSeleccionado by remember { mutableStateOf<Medico?>(null) }
+                var fechaConfirmada by remember { mutableStateOf("") }
+                var horaConfirmada by remember { mutableStateOf("") }
+
+                BackHandler(enabled = pantalla != Pantalla.INICIO) {
+                    pantalla = when (pantalla) {
+                        Pantalla.PERFIL_MEDICO -> Pantalla.INICIO
+                        Pantalla.AGENDAR -> Pantalla.PERFIL_MEDICO
+                        Pantalla.CONFIRMACION -> Pantalla.INICIO
+                        Pantalla.INICIO -> Pantalla.INICIO
+                    }
                 }
 
-                BackHandler(enabled = medicoSeleccionado != null) {
-                    medicoSeleccionado = null
-                }
+                when (pantalla) {
+                    Pantalla.INICIO -> {
+                        PantallaInicio(
+                            onMedicoClick = { medico ->
+                                medicoSeleccionado = medico
+                                pantalla = Pantalla.PERFIL_MEDICO
+                            }
+                        )
+                    }
 
-                if (medicoSeleccionado == null) {
-                    PantallaInicio(
-                        onMedicoClick = { medico ->
-                            medicoSeleccionado = medico
+                    Pantalla.PERFIL_MEDICO -> {
+                        medicoSeleccionado?.let { medico ->
+                            PantallaPerfilMedico(
+                                medico = medico,
+                                onVolver = { pantalla = Pantalla.INICIO },
+                                onAgendar = { pantalla = Pantalla.AGENDAR }
+                            )
                         }
-                    )
-                } else {
-                    PantallaPerfilMedico(
-                        medico = medicoSeleccionado!!,
-                        onVolver = {
-                            medicoSeleccionado = null
+                    }
+
+                    Pantalla.AGENDAR -> {
+                        medicoSeleccionado?.let { medico ->
+                            PantallaAgendarCita(
+                                medico = medico,
+                                onVolver = { pantalla = Pantalla.PERFIL_MEDICO },
+                                onConfirmar = { fecha, hora ->
+                                    fechaConfirmada = fecha
+                                    horaConfirmada = hora
+                                    pantalla = Pantalla.CONFIRMACION
+                                }
+                            )
                         }
-                    )
+                    }
+
+                    Pantalla.CONFIRMACION -> {
+                        medicoSeleccionado?.let { medico ->
+                            PantallaConfirmacion(
+                                medico = medico,
+                                fecha = fechaConfirmada,
+                                hora = horaConfirmada,
+                                onVolverInicio = {
+                                    pantalla = Pantalla.INICIO
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }

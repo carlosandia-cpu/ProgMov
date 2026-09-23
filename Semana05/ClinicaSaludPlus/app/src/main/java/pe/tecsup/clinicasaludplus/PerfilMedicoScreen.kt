@@ -3,8 +3,10 @@ package pe.tecsup.clinicasaludplus
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -20,7 +22,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PantallaPerfilMedico(
     medico: Medico,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    onAgendar: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -52,10 +55,19 @@ fun PantallaPerfilMedico(
 
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Atención especializada en " +
+                "Atención especializada en " +
                         "${medico.especialidad.lowercase()}. " +
-                        "Selecciona una fecha y hora para reservar una consulta."
+                        "Puedes reservar una consulta en los horarios disponibles."
             )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = onAgendar,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Agendar cita")
+            }
         }
     }
 }
