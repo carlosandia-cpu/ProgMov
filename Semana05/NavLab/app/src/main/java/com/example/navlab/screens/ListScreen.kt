@@ -10,11 +10,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.navlab.navigation.Screen
 
@@ -22,12 +25,25 @@ import com.example.navlab.navigation.Screen
 @Composable
 fun ListScreen(navController: NavController) {
     val elementos = remember {
-        mutableStateListOf<Int>().apply { addAll(1..8) }
+        mutableStateListOf<Int>().apply {
+            addAll(1..8)
+        }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Lista de elementos") })
+            TopAppBar(
+                title = { Text("Lista") },
+                navigationIcon = {
+                    TextButton(onClick = { navController.popBackStack() }) {
+                        Text(
+                            text = "‹",
+                            color = Color.Black,
+                            fontSize = 32.sp
+                        )
+                    }
+                }
+            )
         }
     ) { padding ->
         LazyColumn(
