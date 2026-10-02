@@ -16,8 +16,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,8 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.andia.lab04carritotecsup.ui.theme.Lab04CarritoTecsupTheme
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.foundation.layout.Box
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +69,10 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
     var cantidad by remember { mutableStateOf("") }
 
     val productos = remember {
+        mutableStateListOf<Producto>()
+    }
+
+    val favoritos = remember {
         mutableStateListOf<Producto>()
     }
 
@@ -186,6 +192,9 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
 
             HorizontalDivider()
 
+            // TEMPORAL: verifica que la opción Favoritos funciona
+            Text("Favoritos: ${favoritos.size}")
+
             if (productos.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -224,6 +233,12 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
                             producto = producto,
                             onEliminar = {
                                 productos.remove(producto)
+                                favoritos.remove(producto)
+                            },
+                            onFavorito = {
+                                if (producto !in favoritos) {
+                                    favoritos.add(producto)
+                                }
                             }
                         )
                     }
@@ -243,9 +258,10 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
 @Composable
 fun TarjetaProducto(
     producto: Producto,
-    onEliminar: () -> Unit
+    onEliminar: () -> Unit,
+    onFavorito: () -> Unit
 ) {
-    // Estado que controlará si el menú contextual está abierto o cerrado
+    // Estado que controla si el menú contextual está abierto o cerrado
     var expanded by remember { mutableStateOf(false) }
 
     val importe = producto.precio * producto.cantidad
@@ -295,7 +311,7 @@ fun TarjetaProducto(
                 )
             }
 
-            // Ícono de 3 puntos (el DropdownMenu se agrega en el commit 2)
+            // El DropdownMenu va dentro del Box, junto al ícono que lo activa
             Box {
                 IconButton(
                     onClick = { expanded = true }
@@ -303,6 +319,31 @@ fun TarjetaProducto(
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "Más opciones"
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Favoritos") },
+                        onClick = {
+                            expanded = false
+                            onFavorito()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Compartir") },
+                        onClick = {
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Reportar") },
+                        onClick = {
+                            expanded = false
+                        }
                     )
                 }
             }
