@@ -17,26 +17,31 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.andia.lab04carritotecsup.ui.theme.Lab04CarritoTecsupTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,12 +59,30 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Lab04CarritoTecsupTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
-                    PantallaCarrito(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                // Estado del drawer y corrutina para abrirlo/cerrarlo
+                val drawerState = rememberDrawerState(DrawerValue.Closed)
+                val scope = rememberCoroutineScope()
+
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        AppDrawer(
+                            onItemClick = {
+                                scope.launch { drawerState.close() }
+                            }
+                        )
+                    }
+                ) {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize()
+                    ) { innerPadding ->
+                        PantallaCarrito(
+                            modifier = Modifier.padding(innerPadding),
+                            onMenuClick = {
+                                scope.launch { drawerState.open() }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -66,7 +90,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PantallaCarrito(modifier: Modifier = Modifier) {
+fun PantallaCarrito(
+    modifier: Modifier = Modifier,
+    onMenuClick: () -> Unit = {}
+) {
     var nombre by remember { mutableStateOf("") }
     var precio by remember { mutableStateOf("") }
     var cantidad by remember { mutableStateOf("") }
@@ -93,16 +120,30 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.primary
         ) {
-            Text(
-                text = "TECSUP Store",
+            Row(
                 modifier = Modifier.padding(
-                    horizontal = 16.dp,
-                    vertical = 14.dp
+                    horizontal = 4.dp,
+                    vertical = 6.dp
                 ),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Ícono ☰ que abre el NavigationDrawer
+                IconButton(onClick = onMenuClick) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Abrir menú",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+
+                Text(
+                    text = "TECSUP Store",
+                    modifier = Modifier.padding(start = 4.dp),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
 
         Column(
@@ -355,7 +396,6 @@ fun TarjetaProducto(
                         }
                     )
 
-                    // Divisor que separa la acción destructiva/de reporte
                     HorizontalDivider()
 
                     DropdownMenuItem(
