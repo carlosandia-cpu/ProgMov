@@ -91,7 +91,7 @@ fun PantallaCarrito(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.primary
         ) {
             Text(
-                text = "Mi Carrito TECSUP",
+                text = "TECSUP Store",
                 modifier = Modifier.padding(
                     horizontal = 16.dp,
                     vertical = 14.dp
