@@ -39,7 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.andia.lab04carritotecsup.ui.theme.Lab04CarritoTecsupTheme
-
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.foundation.layout.Box
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -244,6 +245,9 @@ fun TarjetaProducto(
     producto: Producto,
     onEliminar: () -> Unit
 ) {
+    // Estado que controlará si el menú contextual está abierto o cerrado
+    var expanded by remember { mutableStateOf(false) }
+
     val importe = producto.precio * producto.cantidad
 
     Card(
@@ -289,6 +293,18 @@ fun TarjetaProducto(
                     contentDescription = "Eliminar",
                     tint = MaterialTheme.colorScheme.error
                 )
+            }
+
+            // Ícono de 3 puntos (el DropdownMenu se agrega en el commit 2)
+            Box {
+                IconButton(
+                    onClick = { expanded = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Más opciones"
+                    )
+                }
             }
         }
     }
