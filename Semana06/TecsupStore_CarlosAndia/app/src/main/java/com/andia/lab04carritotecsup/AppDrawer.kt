@@ -14,12 +14,27 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+
+private data class DestinoDrawer(
+    val ruta: String,
+    val titulo: String,
+    val icono: ImageVector
+)
 
 @Composable
 fun AppDrawer(
-    onItemClick: () -> Unit
+    destinoActual: String,
+    onDestinoClick: (String) -> Unit
 ) {
+    val destinos = listOf(
+        DestinoDrawer(Rutas.INICIO, "Inicio", Icons.Default.Home),
+        DestinoDrawer(Rutas.PEDIDOS, "Mis pedidos", Icons.Default.ShoppingCart),
+        DestinoDrawer(Rutas.FAVORITOS, "Favoritos", Icons.Default.Favorite),
+        DestinoDrawer(Rutas.PERFIL, "Perfil", Icons.Default.Person)
+    )
+
     ModalDrawerSheet {
         Text(
             text = "TECSUP Store",
@@ -29,36 +44,19 @@ fun AppDrawer(
 
         HorizontalDivider()
 
-        NavigationDrawerItem(
-            label = { Text("Inicio") },
-            icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            selected = true,
-            onClick = onItemClick,
-            modifier = Modifier.padding(horizontal = 12.dp)
-        )
-
-        NavigationDrawerItem(
-            label = { Text("Mis pedidos") },
-            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
-            selected = false,
-            onClick = onItemClick,
-            modifier = Modifier.padding(horizontal = 12.dp)
-        )
-
-        NavigationDrawerItem(
-            label = { Text("Favoritos") },
-            icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-            selected = false,
-            onClick = onItemClick,
-            modifier = Modifier.padding(horizontal = 12.dp)
-        )
-
-        NavigationDrawerItem(
-            label = { Text("Perfil") },
-            icon = { Icon(Icons.Default.Person, contentDescription = null) },
-            selected = false,
-            onClick = onItemClick,
-            modifier = Modifier.padding(horizontal = 12.dp)
-        )
+        destinos.forEach { destino ->
+            NavigationDrawerItem(
+                label = { Text(destino.titulo) },
+                icon = {
+                    Icon(
+                        imageVector = destino.icono,
+                        contentDescription = null
+                    )
+                },
+                selected = destinoActual == destino.ruta,
+                onClick = { onDestinoClick(destino.ruta) },
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+            )
+        }
     }
 }
