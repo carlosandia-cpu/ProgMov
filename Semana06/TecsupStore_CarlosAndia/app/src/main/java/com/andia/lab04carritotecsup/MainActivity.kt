@@ -16,7 +16,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -328,6 +331,12 @@ fun TarjetaProducto(
                 ) {
                     DropdownMenuItem(
                         text = { Text("Favoritos") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = null
+                            )
+                        },
                         onClick = {
                             expanded = false
                             onFavorito()
@@ -335,12 +344,28 @@ fun TarjetaProducto(
                     )
                     DropdownMenuItem(
                         text = { Text("Compartir") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = null
+                            )
+                        },
                         onClick = {
                             expanded = false
                         }
                     )
+
+                    // Divisor que separa la acción destructiva/de reporte
+                    HorizontalDivider()
+
                     DropdownMenuItem(
                         text = { Text("Reportar") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null
+                            )
+                        },
                         onClick = {
                             expanded = false
                         }
