@@ -10,6 +10,7 @@ import com.saludplus.citas.data.repository.Repositorio
 import com.saludplus.citas.ui.components.BarraNavegacionInferior
 import com.saludplus.citas.ui.components.PantallaEnConstruccion
 import com.saludplus.citas.ui.screens.agendamiento.EspecialidadesScreen
+import com.saludplus.citas.ui.screens.agendamiento.FechaHoraScreen
 import com.saludplus.citas.ui.screens.agendamiento.MedicosScreen
 import com.saludplus.citas.ui.screens.auth.LoginScreen
 import com.saludplus.citas.ui.screens.auth.RegistroScreen
@@ -136,15 +137,33 @@ fun AppNavigation() {
             )
         }
 
-        // Provisional: se reemplaza por FechaHoraScreen en el commit 7
         composable(
             route = Rutas.FECHA_HORA,
             arguments = listOf(navArgument(Rutas.ARG_MEDICO_ID) { type = NavType.IntType })
         ) { entrada ->
             val medicoId = entrada.arguments?.getInt(Rutas.ARG_MEDICO_ID) ?: 0
-            val nombre = Repositorio.obtenerMedico(medicoId)?.nombre ?: "desconocido"
+            FechaHoraScreen(
+                medicoId = medicoId,
+                onAtras = volver,
+                onContinuar = { fecha, hora ->
+                    navController.navigate(Rutas.confirmar(medicoId, fecha, hora))
+                }
+            )
+        }
+
+        // Provisional: se reemplaza por ConfirmarCitaScreen en el commit 8
+        composable(
+            route = Rutas.CONFIRMAR,
+            arguments = listOf(
+                navArgument(Rutas.ARG_MEDICO_ID) { type = NavType.IntType },
+                navArgument(Rutas.ARG_FECHA) { type = NavType.StringType },
+                navArgument(Rutas.ARG_HORA) { type = NavType.StringType }
+            )
+        ) { entrada ->
+            val fecha = entrada.arguments?.getString(Rutas.ARG_FECHA) ?: ""
+            val hora = entrada.arguments?.getString(Rutas.ARG_HORA) ?: ""
             PantallaEnConstruccion(
-                titulo = "Fecha y hora con $nombre",
+                titulo = "Confirmar: $fecha a las $hora",
                 acciones = listOf("Volver" to volver)
             )
         }
