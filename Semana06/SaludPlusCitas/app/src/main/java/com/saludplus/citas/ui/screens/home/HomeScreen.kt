@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.saludplus.citas.data.model.Especialidad
 import com.saludplus.citas.data.repository.Repositorio
+import com.saludplus.citas.navigation.Rutas
+import com.saludplus.citas.ui.components.BarraNavegacionInferior
 
 @Composable
 fun HomeScreen(
@@ -49,12 +51,16 @@ fun HomeScreen(
     onMisCitas: () -> Unit,
     onVerEspecialidades: () -> Unit,
     onEspecialidad: (Int) -> Unit,
-    onNotificaciones: () -> Unit
+    onNotificaciones: () -> Unit,
+    onNavegar: (String) -> Unit
 ) {
     val nombre = Repositorio.usuarioActual?.nombre?.substringBefore(" ") ?: "Paciente"
     val destacadas = Repositorio.especialidadesDestacadas()
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = { BarraNavegacionInferior(Rutas.HOME, onNavegar) }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

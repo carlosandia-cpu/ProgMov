@@ -136,9 +136,10 @@ fun CampoTexto(
 @Composable
 fun PantallaEnConstruccion(
     titulo: String,
-    acciones: List<Pair<String, () -> Unit>> = emptyList()
+    acciones: List<Pair<String, () -> Unit>> = emptyList(),
+    barraInferior: @Composable () -> Unit = {}
 ) {
-    Scaffold(topBar = { BarraSuperior(titulo) }) { padding ->
+    Scaffold(topBar = { BarraSuperior(titulo) }, bottomBar = barraInferior) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
