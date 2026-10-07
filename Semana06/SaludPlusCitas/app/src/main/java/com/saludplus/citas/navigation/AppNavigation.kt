@@ -17,7 +17,9 @@ import com.saludplus.citas.ui.screens.agendamiento.MedicosScreen
 import com.saludplus.citas.ui.screens.auth.LoginScreen
 import com.saludplus.citas.ui.screens.auth.RegistroScreen
 import com.saludplus.citas.ui.screens.auth.SplashScreen
+import com.saludplus.citas.ui.screens.citas.MisCitasScreen
 import com.saludplus.citas.ui.screens.home.HomeScreen
+import com.saludplus.citas.ui.screens.perfil.PerfilScreen
 
 @Composable
 fun AppNavigation() {
@@ -86,11 +88,10 @@ fun AppNavigation() {
             )
         }
 
-        // Provisional: se reemplaza por MisCitasScreen en el commit 9
         composable(Rutas.MIS_CITAS) {
-            PantallaEnConstruccion(
-                titulo = "Mis citas",
-                barraInferior = { BarraNavegacionInferior(Rutas.MIS_CITAS, irATab) }
+            MisCitasScreen(
+                onNavegar = irATab,
+                onAgendar = { navController.navigate(Rutas.ESPECIALIDADES) }
             )
         }
 
@@ -102,19 +103,15 @@ fun AppNavigation() {
             )
         }
 
-        // Provisional: se reemplaza por PerfilScreen en el commit 9
         composable(Rutas.PERFIL) {
-            PantallaEnConstruccion(
-                titulo = "Perfil de ${Repositorio.usuarioActual?.nombre ?: "invitado"}",
-                acciones = listOf(
-                    "Cerrar sesión" to {
-                        Repositorio.cerrarSesion()
-                        navController.navigate(Rutas.SPLASH) {
-                            popUpTo(Rutas.HOME) { inclusive = true }
-                        }
+            PerfilScreen(
+                onNavegar = irATab,
+                onCerrarSesion = {
+                    Repositorio.cerrarSesion()
+                    navController.navigate(Rutas.SPLASH) {
+                        popUpTo(Rutas.HOME) { inclusive = true }
                     }
-                ),
-                barraInferior = { BarraNavegacionInferior(Rutas.PERFIL, irATab) }
+                }
             )
         }
 
