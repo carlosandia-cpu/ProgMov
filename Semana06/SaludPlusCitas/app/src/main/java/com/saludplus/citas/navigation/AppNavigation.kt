@@ -9,6 +9,8 @@ import androidx.navigation.navArgument
 import com.saludplus.citas.data.repository.Repositorio
 import com.saludplus.citas.ui.components.BarraNavegacionInferior
 import com.saludplus.citas.ui.components.PantallaEnConstruccion
+import com.saludplus.citas.ui.screens.agendamiento.EspecialidadesScreen
+import com.saludplus.citas.ui.screens.agendamiento.MedicosScreen
 import com.saludplus.citas.ui.screens.auth.LoginScreen
 import com.saludplus.citas.ui.screens.auth.RegistroScreen
 import com.saludplus.citas.ui.screens.auth.SplashScreen
@@ -25,7 +27,7 @@ fun AppNavigation() {
         }
     }
 
-    val volver = { navController.popBackStack() }
+    val volver: () -> Unit = { navController.popBackStack() }
 
     // Cambio entre los 4 destinos del menú inferior sin apilar pantallas repetidas
     val irATab: (String) -> Unit = { ruta ->
@@ -47,7 +49,7 @@ fun AppNavigation() {
 
         composable(Rutas.REGISTRO) {
             RegistroScreen(
-                onAtras = { navController.popBackStack() },
+                onAtras = volver,
                 onVerTerminos = { navController.navigate(Rutas.TERMINOS) },
                 onRegistrado = { irAHome() }
             )
@@ -55,7 +57,7 @@ fun AppNavigation() {
 
         composable(Rutas.LOGIN) {
             LoginScreen(
-                onAtras = { navController.popBackStack() },
+                onAtras = volver,
                 onIrRegistro = { navController.navigate(Rutas.REGISTRO) },
                 onLoginExitoso = { irAHome() }
             )
@@ -64,7 +66,7 @@ fun AppNavigation() {
         composable(Rutas.TERMINOS) {
             PantallaEnConstruccion(
                 titulo = "Términos y condiciones",
-                acciones = listOf("Volver" to { volver() })
+                acciones = listOf("Volver" to volver)
             )
         }
 
@@ -89,7 +91,7 @@ fun AppNavigation() {
             )
         }
 
-        // Provisional: se reemplaza por ResultadosScreen en el commit 10 (reto extra)
+        // Provisional: reto extra
         composable(Rutas.RESULTADOS) {
             PantallaEnConstruccion(
                 titulo = "Resultados",
@@ -113,12 +115,12 @@ fun AppNavigation() {
             )
         }
 
-        // ---- Pantallas fuera del menú: se reemplazan en los siguientes commits ----
+        // ---- Flujo de agendamiento ----
 
         composable(Rutas.ESPECIALIDADES) {
-            PantallaEnConstruccion(
-                titulo = "Especialidades",
-                acciones = listOf("Volver" to { volver() })
+            EspecialidadesScreen(
+                onAtras = volver,
+                onEspecialidad = { id -> navController.navigate(Rutas.medicos(id)) }
             )
         }
 
@@ -126,18 +128,31 @@ fun AppNavigation() {
             route = Rutas.MEDICOS,
             arguments = listOf(navArgument(Rutas.ARG_ESPECIALIDAD_ID) { type = NavType.IntType })
         ) { entrada ->
-            val id = entrada.arguments?.getInt(Rutas.ARG_ESPECIALIDAD_ID) ?: 0
-            val nombre = Repositorio.obtenerEspecialidad(id)?.nombre ?: "desconocida"
+            val especialidadId = entrada.arguments?.getInt(Rutas.ARG_ESPECIALIDAD_ID) ?: 0
+            MedicosScreen(
+                especialidadId = especialidadId,
+                onAtras = volver,
+                onMedico = { medicoId -> navController.navigate(Rutas.fechaHora(medicoId)) }
+            )
+        }
+
+        // Provisional: se reemplaza por FechaHoraScreen en el commit 7
+        composable(
+            route = Rutas.FECHA_HORA,
+            arguments = listOf(navArgument(Rutas.ARG_MEDICO_ID) { type = NavType.IntType })
+        ) { entrada ->
+            val medicoId = entrada.arguments?.getInt(Rutas.ARG_MEDICO_ID) ?: 0
+            val nombre = Repositorio.obtenerMedico(medicoId)?.nombre ?: "desconocido"
             PantallaEnConstruccion(
-                titulo = "Médicos de $nombre",
-                acciones = listOf("Volver" to { volver() })
+                titulo = "Fecha y hora con $nombre",
+                acciones = listOf("Volver" to volver)
             )
         }
 
         composable(Rutas.NOTIFICACIONES) {
             PantallaEnConstruccion(
                 titulo = "Notificaciones",
-                acciones = listOf("Volver" to { volver() })
+                acciones = listOf("Volver" to volver)
             )
         }
     }
