@@ -16,15 +16,19 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,9 +46,12 @@ import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 
-private fun obtenerProximosDiasHabiles(cantidad: Int = 5): List<LocalDate> {
+private fun obtenerProximosDiasHabiles(
+    fechaInicio: LocalDate = LocalDate.now(),
+    cantidad: Int = 5
+): List<LocalDate> {
     val dias = mutableListOf<LocalDate>()
-    var fechaActual = LocalDate.now()
+    var fechaActual = fechaInicio
     while (dias.size < cantidad) {
         if (fechaActual.dayOfWeek != DayOfWeek.SATURDAY && fechaActual.dayOfWeek != DayOfWeek.SUNDAY) {
             dias.add(fechaActual)
@@ -63,7 +70,10 @@ fun FechaHoraScreen(
     val medico = Repositorio.obtenerMedico(medicoId)
     val especialidad = medico?.let { Repositorio.obtenerEspecialidad(it.especialidadId) }
 
-    val diasDisponibles = remember { obtenerProximosDiasHabiles() }
+    var semana by rememberSaveable { mutableIntStateOf(0) }
+    val diasDisponibles = remember(semana) {
+        obtenerProximosDiasHabiles(LocalDate.now().plusWeeks(semana.toLong()))
+    }
 
     var fechaSel by rememberSaveable { mutableStateOf<String?>(null) }
     var horaSel by rememberSaveable { mutableStateOf<String?>(null) }
@@ -76,11 +86,34 @@ fun FechaHoraScreen(
     val puedeContinuar = fechaSel != null && horaSel != null
 
     val tituloMes = remember(diasDisponibles) {
-        val primerDia = diasDisponibles.firstOrNull() ?: LocalDate.now()
-        val mesNombre = primerDia.month
-            .getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es-PE"))
-            .replaceFirstChar { it.titlecase(Locale.forLanguageTag("es-PE")) }
-        "$mesNombre ${primerDia.year}"
+        val locale = Locale.forLanguageTag("es-PE")
+        if (diasDisponibles.isEmpty()) {
+            val hoy = LocalDate.now()
+            val mes = hoy.month
+                .getDisplayName(TextStyle.FULL, locale)
+                .replaceFirstChar { it.titlecase(locale) }
+            "$mes ${hoy.year}"
+        } else {
+            val primerDia = diasDisponibles.first()
+            val ultimoDia = diasDisponibles.last()
+
+            val mes1 = primerDia.month
+                .getDisplayName(TextStyle.FULL, locale)
+                .replaceFirstChar { it.titlecase(locale) }
+            val mes2 = ultimoDia.month
+                .getDisplayName(TextStyle.FULL, locale)
+                .replaceFirstChar { it.titlecase(locale) }
+
+            if (primerDia.year == ultimoDia.year) {
+                if (primerDia.month == ultimoDia.month) {
+                    "$mes1 ${primerDia.year}"
+                } else {
+                    "$mes1 - $mes2 ${primerDia.year}"
+                }
+            } else {
+                "$mes1 ${primerDia.year} - $mes2 ${ultimoDia.year}"
+            }
+        }
     }
 
     Scaffold(
@@ -128,11 +161,49 @@ fun FechaHoraScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            Text(
-                text = tituloMes,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            // Título del mes y navegación de semanas
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = tituloMes,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Row {
+                    IconButton(
+                        onClick = {
+                            if (semana > 0) {
+                                semana--
+                                fechaSel = null
+                                horaSel = null
+                            }
+                        },
+                        enabled = semana > 0
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = "Semana anterior"
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            semana++
+                            fechaSel = null
+                            horaSel = null
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = "Siguiente semana"
+                        )
+                    }
+                }
+            }
+
             Spacer(Modifier.height(8.dp))
 
             // Días
