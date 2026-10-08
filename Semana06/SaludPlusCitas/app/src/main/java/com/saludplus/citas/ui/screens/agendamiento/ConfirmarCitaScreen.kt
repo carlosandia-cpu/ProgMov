@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.saludplus.citas.data.repository.Repositorio
 import com.saludplus.citas.ui.components.BarraSuperior
 import com.saludplus.citas.ui.components.BotonPrimario
-import com.saludplus.citas.ui.components.formatearFecha
+import com.saludplus.citas.ui.components.formatearFechaLarga
 
 @Composable
 fun ConfirmarCitaScreen(
@@ -74,7 +74,7 @@ fun ConfirmarCitaScreen(
                     HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
                     FilaDato("Consultorio", medico?.consultorio ?: "-")
                     HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
-                    FilaDato("Fecha", formatearFecha(fecha))
+                    FilaDato("Fecha", formatearFechaLarga(fecha))
                     HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
                     FilaDato("Hora", hora)
                 }
