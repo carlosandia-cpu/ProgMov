@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -36,15 +37,22 @@ import androidx.compose.ui.unit.dp
 import com.saludplus.citas.data.repository.Repositorio
 import com.saludplus.citas.ui.components.BarraSuperior
 import com.saludplus.citas.ui.components.BotonPrimario
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
-// Fase 1: nombre del día de la semana de cada fecha fija
-private val diasSemanaFijos = mapOf(
-    "2026-10-06" to "Mar",
-    "2026-10-07" to "Mié",
-    "2026-10-08" to "Jue",
-    "2026-10-09" to "Vie",
-    "2026-10-12" to "Lun"
-)
+private fun obtenerProximosDiasHabiles(cantidad: Int = 5): List<LocalDate> {
+    val dias = mutableListOf<LocalDate>()
+    var fechaActual = LocalDate.now()
+    while (dias.size < cantidad) {
+        if (fechaActual.dayOfWeek != DayOfWeek.SATURDAY && fechaActual.dayOfWeek != DayOfWeek.SUNDAY) {
+            dias.add(fechaActual)
+        }
+        fechaActual = fechaActual.plusDays(1)
+    }
+    return dias
+}
 
 @Composable
 fun FechaHoraScreen(
@@ -55,6 +63,8 @@ fun FechaHoraScreen(
     val medico = Repositorio.obtenerMedico(medicoId)
     val especialidad = medico?.let { Repositorio.obtenerEspecialidad(it.especialidadId) }
 
+    val diasDisponibles = remember { obtenerProximosDiasHabiles() }
+
     var fechaSel by rememberSaveable { mutableStateOf<String?>(null) }
     var horaSel by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -64,6 +74,14 @@ fun FechaHoraScreen(
         ?: emptyList()
 
     val puedeContinuar = fechaSel != null && horaSel != null
+
+    val tituloMes = remember(diasDisponibles) {
+        val primerDia = diasDisponibles.firstOrNull() ?: LocalDate.now()
+        val mesNombre = primerDia.month
+            .getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es-PE"))
+            .replaceFirstChar { it.titlecase(Locale.forLanguageTag("es-PE")) }
+        "$mesNombre ${primerDia.year}"
+    }
 
     Scaffold(
         topBar = { BarraSuperior("Fecha y hora", onAtras) },
@@ -111,7 +129,7 @@ fun FechaHoraScreen(
             Spacer(Modifier.height(20.dp))
 
             Text(
-                text = "Octubre 2026",
+                text = tituloMes,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -119,13 +137,19 @@ fun FechaHoraScreen(
 
             // Días
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Repositorio.diasFijos.forEach { fecha ->
+                diasDisponibles.forEach { fecha ->
+                    val fechaIso = fecha.toString()
+                    val nombreDia = fecha.dayOfWeek
+                        .getDisplayName(TextStyle.SHORT, Locale.forLanguageTag("es-PE"))
+                        .replace(".", "")
+                        .replaceFirstChar { it.titlecase(Locale.forLanguageTag("es-PE")) }
+
                     ChipDia(
-                        diaSemana = diasSemanaFijos[fecha] ?: "",
-                        numero = fecha.substringAfterLast("-").toInt(),
-                        seleccionado = fecha == fechaSel,
+                        diaSemana = nombreDia,
+                        numero = fecha.dayOfMonth,
+                        seleccionado = fechaIso == fechaSel,
                         onClick = {
-                            fechaSel = fecha
+                            fechaSel = fechaIso
                             horaSel = null // al cambiar de día se reinicia la hora
                         },
                         modifier = Modifier.weight(1f)
