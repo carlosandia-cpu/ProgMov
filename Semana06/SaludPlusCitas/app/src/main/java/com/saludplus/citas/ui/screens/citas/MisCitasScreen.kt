@@ -30,8 +30,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.saludplus.citas.data.model.Cita
 import com.saludplus.citas.data.repository.Repositorio
-import com.saludplus.citas.navigation.Rutas
-import com.saludplus.citas.ui.components.BarraNavegacionInferior
 import com.saludplus.citas.ui.components.BarraSuperior
 import com.saludplus.citas.ui.components.BotonPrimario
 import com.saludplus.citas.ui.components.formatearFecha
@@ -39,15 +37,14 @@ import com.saludplus.citas.ui.theme.VerdeExito
 
 @Composable
 fun MisCitasScreen(
-    onNavegar: (String) -> Unit,
+    onMenu: () -> Unit,
     onAgendar: () -> Unit
 ) {
     // Lee la lista observable del Repositorio: se actualiza sola al agendar
     val citas = Repositorio.citasDelUsuario()
 
     Scaffold(
-        topBar = { BarraSuperior("Mis citas") },
-        bottomBar = { BarraNavegacionInferior(Rutas.MIS_CITAS, onNavegar) },
+        topBar = { BarraSuperior("Agenda", onMenu = onMenu) },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         if (citas.isEmpty()) {

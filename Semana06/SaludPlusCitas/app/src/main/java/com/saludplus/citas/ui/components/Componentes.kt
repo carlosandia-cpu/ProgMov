@@ -10,9 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,16 +37,24 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
-/** Barra superior azul con flecha de regreso opcional. */
+/** Barra superior: flecha de regreso (onAtras) o botón de menú ☰ (onMenu). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BarraSuperior(titulo: String, onAtras: (() -> Unit)? = null) {
+fun BarraSuperior(
+    titulo: String,
+    onAtras: (() -> Unit)? = null,
+    onMenu: (() -> Unit)? = null
+) {
     TopAppBar(
-        title = { Text(titulo) },
+        title = { Text(titulo, style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
             if (onAtras != null) {
                 IconButton(onClick = onAtras) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                }
+            } else if (onMenu != null) {
+                IconButton(onClick = onMenu) {
+                    Icon(Icons.Default.Menu, contentDescription = "Menú")
                 }
             }
         },
@@ -56,7 +66,7 @@ fun BarraSuperior(titulo: String, onAtras: (() -> Unit)? = null) {
     )
 }
 
-/** Botón azul principal de ancho completo. */
+/** Botón principal de ancho completo (color de acento). */
 @Composable
 fun BotonPrimario(
     texto: String,
@@ -67,26 +77,30 @@ fun BotonPrimario(
     Button(
         onClick = onClick,
         enabled = habilitado,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary
+        ),
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
     ) {
-        Text(texto)
+        Text(texto, style = MaterialTheme.typography.labelLarge)
     }
 }
 
-/** Botón con borde azul, para acciones secundarias. */
+/** Botón con borde, para acciones secundarias. */
 @Composable
 fun BotonSecundario(texto: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     OutlinedButton(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
     ) {
-        Text(texto)
+        Text(texto, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -127,7 +141,7 @@ fun CampoTexto(
                 }
             }
         } else null,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         modifier = modifier.fillMaxWidth()
     )
 }

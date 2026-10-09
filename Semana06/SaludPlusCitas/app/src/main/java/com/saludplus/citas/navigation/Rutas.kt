@@ -9,6 +9,7 @@ object Rutas {
     const val ARG_FECHA = "fecha"
     const val ARG_HORA = "hora"
     const val ARG_CITA_ID = "citaId"
+    const val ARG_SEDE_ID = "sedeId"
 
     // Rutas sin parámetros
     const val SPLASH = "splash"
@@ -21,9 +22,12 @@ object Rutas {
     const val RESULTADOS = "resultados"
     const val PERFIL = "perfil"
     const val NOTIFICACIONES = "notificaciones"
+    const val SEDES = "sedes"
+    const val DOCTORES = "doctores"
 
     // Rutas con parámetros (plantillas para el NavHost)
     const val MEDICOS = "medicos/{$ARG_ESPECIALIDAD_ID}"
+    const val SEDE_CITAS = "sede_citas/{$ARG_SEDE_ID}"
     const val FECHA_HORA = "fecha_hora/{$ARG_MEDICO_ID}"
     const val CONFIRMAR = "confirmar/{$ARG_MEDICO_ID}/{$ARG_FECHA}/{$ARG_HORA}"
     const val CITA_EXITOSA = "cita_exitosa/{$ARG_CITA_ID}"
@@ -31,6 +35,7 @@ object Rutas {
 
     // Funciones para navegar con valores reales
     fun medicos(especialidadId: Int) = "medicos/$especialidadId"
+    fun sedeCitas(sedeId: Int) = "sede_citas/$sedeId"
     fun fechaHora(medicoId: Int) = "fecha_hora/$medicoId"
     fun confirmar(medicoId: Int, fecha: String, hora: String) =
         "confirmar/$medicoId/$fecha/${Uri.encode(hora)}"
