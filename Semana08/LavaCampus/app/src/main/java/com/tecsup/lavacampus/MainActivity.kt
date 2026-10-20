@@ -4,44 +4,32 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.tecsup.lavacampus.ui.theme.LavaCampusTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tecsup.lavacampus.model.Rol
+import com.tecsup.lavacampus.ui.navigation.NavLava
+import com.tecsup.lavacampus.ui.theme.LavaTheme
+import com.tecsup.lavacampus.viewmodel.LavaViewModelFactory
+import com.tecsup.lavacampus.viewmodel.SesionViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val app = application as LavaApp
+        val factory = LavaViewModelFactory(app.repository, app.preferencias)
+
         setContent {
-            LavaCampusTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            val sesionVm: SesionViewModel = viewModel(factory = factory)
+            val modoOscuro by sesionVm.modoOscuro.collectAsState()
+            val usuario by sesionVm.usuarioActual.collectAsState()
+            val rol = usuario?.rol?.let { Rol.valueOf(it) } ?: Rol.CLIENTE
+
+            LavaTheme(rol = rol, modoOscuro = modoOscuro) {
+                NavLava(sesionVm)
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    LavaCampusTheme {
-        Greeting("Android")
     }
 }
