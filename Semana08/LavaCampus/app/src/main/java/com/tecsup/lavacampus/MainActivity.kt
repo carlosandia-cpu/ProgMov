@@ -19,16 +19,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val app = application as LavaApp
-        val factory = LavaViewModelFactory(app.repository, app.preferencias)
 
         setContent {
-            val sesionVm: SesionViewModel = viewModel(factory = factory)
+            val sesionVm: SesionViewModel = viewModel(
+                factory = LavaViewModelFactory(app.repository, app.preferencias)
+            )
             val modoOscuro by sesionVm.modoOscuro.collectAsState()
             val usuario by sesionVm.usuarioActual.collectAsState()
             val rol = usuario?.rol?.let { Rol.valueOf(it) } ?: Rol.CLIENTE
 
             LavaTheme(rol = rol, modoOscuro = modoOscuro) {
-                NavLava(sesionVm)
+                NavLava(sesionVm, app.repository, app.preferencias)
             }
         }
     }
