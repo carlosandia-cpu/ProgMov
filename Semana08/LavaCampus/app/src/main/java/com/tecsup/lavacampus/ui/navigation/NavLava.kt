@@ -1,9 +1,6 @@
 package com.tecsup.lavacampus.ui.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -16,10 +13,8 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -27,10 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -40,18 +33,24 @@ import androidx.navigation.navArgument
 import com.tecsup.lavacampus.data.prefs.PreferenciasStore
 import com.tecsup.lavacampus.data.repository.LavaRepository
 import com.tecsup.lavacampus.model.Rol
+import com.tecsup.lavacampus.ui.administrador.AjustesScreen
 import com.tecsup.lavacampus.ui.administrador.BandejaScreen
+import com.tecsup.lavacampus.ui.administrador.ClientesScreen
+import com.tecsup.lavacampus.ui.administrador.FormularioServicioScreen
 import com.tecsup.lavacampus.ui.administrador.GestionPedidoScreen
 import com.tecsup.lavacampus.ui.administrador.PanelScreen
+import com.tecsup.lavacampus.ui.administrador.ServiciosScreen
 import com.tecsup.lavacampus.ui.components.AppTopBar
 import com.tecsup.lavacampus.ui.estudiante.DetallePedidoScreen
 import com.tecsup.lavacampus.ui.estudiante.InicioScreen
 import com.tecsup.lavacampus.ui.estudiante.LoginScreen
 import com.tecsup.lavacampus.ui.estudiante.MisPedidosScreen
 import com.tecsup.lavacampus.ui.estudiante.NuevoPedidoScreen
+import com.tecsup.lavacampus.ui.estudiante.PerfilScreen
 import com.tecsup.lavacampus.ui.estudiante.SplashScreen
 import com.tecsup.lavacampus.ui.estudiante.TarifasScreen
 import com.tecsup.lavacampus.viewmodel.BandejaViewModel
+import com.tecsup.lavacampus.viewmodel.ClientesViewModel
 import com.tecsup.lavacampus.viewmodel.DetallePedidoViewModel
 import com.tecsup.lavacampus.viewmodel.GestionPedidoViewModel
 import com.tecsup.lavacampus.viewmodel.InicioViewModel
@@ -59,6 +58,8 @@ import com.tecsup.lavacampus.viewmodel.LavaViewModelFactory
 import com.tecsup.lavacampus.viewmodel.MisPedidosViewModel
 import com.tecsup.lavacampus.viewmodel.NuevoPedidoViewModel
 import com.tecsup.lavacampus.viewmodel.PanelViewModel
+import com.tecsup.lavacampus.viewmodel.PerfilViewModel
+import com.tecsup.lavacampus.viewmodel.ServiciosViewModel
 import com.tecsup.lavacampus.viewmodel.SesionViewModel
 import com.tecsup.lavacampus.viewmodel.TarifasViewModel
 
@@ -95,6 +96,15 @@ fun NavLava(
         sesionVm.cerrarSesion()
         nav.navigate(Rutas.LOGIN) {
             popUpTo(nav.graph.id) { inclusive = true }
+        }
+    }
+
+    /** Guarda el otro perfil, navega a su grafo y limpia la pila de navegación. */
+    fun cambiarPerfil(destino: Rol) {
+        sesionVm.cambiarPerfil(destino) { rol ->
+            nav.navigate(if (rol == Rol.ADMIN) Rutas.PANEL else Rutas.INICIO) {
+                popUpTo(nav.graph.id) { inclusive = true }
+            }
         }
     }
 
@@ -164,8 +174,18 @@ fun NavLava(
             }
         }
         composable(Rutas.PERFIL) {
-            ContenedorEstudiante(rutaActual = Rutas.PERFIL, onIr = { irATab(it) }, titulo = "Perfil") { padding ->
-                Provisional("Perfil del estudiante", Modifier.padding(padding), { irALogin() })
+            usuario?.let { u ->
+                val vm: PerfilViewModel = viewModel(factory = fabrica(usuarioId = u.id))
+                ContenedorEstudiante(rutaActual = Rutas.PERFIL, onIr = { irATab(it) }, titulo = "Perfil") { padding ->
+                    PerfilScreen(
+                        usuario = u,
+                        vm = vm,
+                        sesionVm = sesionVm,
+                        modifier = Modifier.padding(padding),
+                        onCambiarPerfil = { cambiarPerfil(Rol.ADMIN) },
+                        onCerrarSesion = { irALogin() }
+                    )
+                }
             }
         }
         composable(Rutas.NUEVO_PEDIDO) {
@@ -220,21 +240,58 @@ fun NavLava(
             val vm: GestionPedidoViewModel = viewModel(factory = fabrica(pedidoId = id))
             GestionPedidoScreen(vm = vm, onAtras = { nav.popBackStack() })
         }
-
-        // Provisionales hasta el commit 14
         composable(Rutas.SERVICIOS) {
-            ContenedorAdmin(rutaActual = Rutas.SERVICIOS, onIr = { irATab(it, Rutas.PANEL) }, titulo = "Servicios") { padding ->
-                Provisional("Servicios", Modifier.padding(padding), null)
+            val vm: ServiciosViewModel = viewModel(factory = fabrica())
+            ContenedorAdmin(
+                rutaActual = Rutas.SERVICIOS,
+                onIr = { irATab(it, Rutas.PANEL) },
+                titulo = "Servicios",
+                fab = {
+                    FloatingActionButton(onClick = { nav.navigate(Rutas.formulario(0)) }) {
+                        Icon(Icons.Default.Add, contentDescription = "Nuevo servicio")
+                    }
+                }
+            ) { padding ->
+                ServiciosScreen(
+                    vm = vm,
+                    modifier = Modifier.padding(padding),
+                    onEditar = { id -> nav.navigate(Rutas.formulario(id)) }
+                )
             }
         }
+        composable(
+            route = Rutas.FORMULARIO,
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { entrada ->
+            val id = entrada.arguments?.getInt("id") ?: 0
+            val vm: ServiciosViewModel = viewModel(factory = fabrica())
+            FormularioServicioScreen(vm = vm, id = id, onAtras = { nav.popBackStack() })
+        }
         composable(Rutas.CLIENTES) {
-            ContenedorAdmin(rutaActual = Rutas.CLIENTES, onIr = { irATab(it, Rutas.PANEL) }, titulo = "Clientes") { padding ->
-                Provisional("Clientes", Modifier.padding(padding), null)
+            val vm: ClientesViewModel = viewModel(factory = fabrica())
+            ContenedorAdmin(
+                rutaActual = Rutas.CLIENTES,
+                onIr = { irATab(it, Rutas.PANEL) },
+                titulo = "Clientes"
+            ) { padding ->
+                ClientesScreen(vm = vm, modifier = Modifier.padding(padding))
             }
         }
         composable(Rutas.AJUSTES) {
-            ContenedorAdmin(rutaActual = Rutas.AJUSTES, onIr = { irATab(it, Rutas.PANEL) }, titulo = "Ajustes") { padding ->
-                Provisional("Ajustes", Modifier.padding(padding), { irALogin() })
+            usuario?.let { u ->
+                ContenedorAdmin(
+                    rutaActual = Rutas.AJUSTES,
+                    onIr = { irATab(it, Rutas.PANEL) },
+                    titulo = "Ajustes"
+                ) { padding ->
+                    AjustesScreen(
+                        usuario = u,
+                        sesionVm = sesionVm,
+                        modifier = Modifier.padding(padding),
+                        onCambiarPerfil = { cambiarPerfil(Rol.CLIENTE) },
+                        onCerrarSesion = { irALogin() }
+                    )
+                }
             }
         }
     }
@@ -261,10 +318,12 @@ private fun ContenedorAdmin(
     rutaActual: String,
     onIr: (String) -> Unit,
     titulo: String? = null,
+    fab: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
         topBar = { if (titulo != null) AppTopBar(titulo = titulo) },
+        floatingActionButton = fab,
         bottomBar = { BarraInferior(itemsAdmin, rutaActual, onIr) },
         content = content
     )
@@ -280,22 +339,6 @@ private fun BarraInferior(items: List<ItemNav>, rutaActual: String, onIr: (Strin
                 icon = { Icon(item.icono, contentDescription = item.titulo) },
                 label = { Text(item.titulo) }
             )
-        }
-    }
-}
-
-@Composable
-private fun Provisional(titulo: String, modifier: Modifier, onSalir: (() -> Unit)?) {
-    Column(
-        modifier = modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(titulo, style = MaterialTheme.typography.titleLarge)
-        if (onSalir != null) {
-            Button(onClick = onSalir, modifier = Modifier.padding(top = 16.dp)) {
-                Text("Cerrar sesión")
-            }
         }
     }
 }

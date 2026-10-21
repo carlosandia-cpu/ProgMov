@@ -13,6 +13,7 @@ interface LavaRepository {
     // Usuarios
     suspend fun login(correo: String, clave: String): Usuario?
     suspend fun obtenerUsuario(id: Int): Usuario?
+    suspend fun primerUsuarioDeRol(rol: String): Usuario?
     fun observarClientes(): Flow<List<ClienteResumen>>
 
     // Servicios (ejemplo resuelto)

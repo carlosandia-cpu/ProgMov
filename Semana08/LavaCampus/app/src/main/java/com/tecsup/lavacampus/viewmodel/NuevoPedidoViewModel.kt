@@ -3,6 +3,7 @@ package com.tecsup.lavacampus.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tecsup.lavacampus.data.local.entity.Servicio
+import com.tecsup.lavacampus.data.prefs.PreferenciasStore
 import com.tecsup.lavacampus.data.repository.LavaRepository
 import com.tecsup.lavacampus.model.LineaPedido
 import com.tecsup.lavacampus.model.Unidad
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -21,11 +23,15 @@ data class LineaResumen(val servicio: Servicio, val cantidad: Double, val subtot
 
 class NuevoPedidoViewModel(
     private val repo: LavaRepository,
+    private val prefs: PreferenciasStore,
     private val usuarioId: Int
 ) : ViewModel() {
 
     val servicios: StateFlow<List<Servicio>> = repo.observarServiciosActivos()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val recibirPedidos: StateFlow<Boolean> = prefs.recibirPedidos
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     private val _cantidades = MutableStateFlow<Map<Int, Double>>(emptyMap())
     val cantidades: StateFlow<Map<Int, Double>> = _cantidades.asStateFlow()
@@ -90,6 +96,11 @@ class NuevoPedidoViewModel(
         if (lineas.isEmpty() || fecha == null || enviando) return
         enviando = true
         viewModelScope.launch {
+            if (!prefs.recibirPedidos.first()) {
+                _mensaje.value = "La lavandería no está recibiendo pedidos"
+                enviando = false
+                return@launch
+            }
             if (repo.contarActivos(usuarioId) >= 3) {
                 _mensaje.value = "Ya tienes 3 pedidos activos"
                 enviando = false

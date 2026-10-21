@@ -28,6 +28,12 @@ class SesionViewModel(
     val modoOscuro: StateFlow<Boolean> = prefs.modoOscuro
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val notificaciones: StateFlow<Boolean> = prefs.notificaciones
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val recibirPedidos: StateFlow<Boolean> = prefs.recibirPedidos
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     /** Reglas del login. Si todo está bien, guarda el perfil y avisa con onExito. */
     fun login(correo: String, clave: String, rolSeleccionado: Rol, onExito: (Rol) -> Unit) {
         if (correo.isBlank() || clave.isBlank()) {
@@ -60,6 +66,32 @@ class SesionViewModel(
         val usuario = repo.obtenerUsuario(id) ?: return null
         _usuarioActual.value = usuario
         return Rol.valueOf(perfil)
+    }
+
+    /** Cambia al otro perfil sin pedir clave (modo práctica en el mismo dispositivo). */
+    fun cambiarPerfil(destino: Rol, onListo: (Rol) -> Unit) {
+        viewModelScope.launch {
+            val usuario = repo.primerUsuarioDeRol(destino.name)
+            if (usuario == null) {
+                _error.value = "No existe un usuario con ese perfil"
+                return@launch
+            }
+            _usuarioActual.value = usuario
+            prefs.guardarSesion(destino, usuario.id)
+            onListo(destino)
+        }
+    }
+
+    fun cambiarModoOscuro(valor: Boolean) {
+        viewModelScope.launch { prefs.guardarModoOscuro(valor) }
+    }
+
+    fun cambiarNotificaciones(valor: Boolean) {
+        viewModelScope.launch { prefs.guardarNotificaciones(valor) }
+    }
+
+    fun cambiarRecibirPedidos(valor: Boolean) {
+        viewModelScope.launch { prefs.guardarRecibirPedidos(valor) }
     }
 
     fun limpiarError() {
