@@ -32,7 +32,8 @@ import com.tecsup.lavacampus.viewmodel.MisPedidosViewModel
 fun MisPedidosScreen(
     vm: MisPedidosViewModel,
     modifier: Modifier = Modifier,
-    onDetalle: (Int) -> Unit
+    onDetalle: (Int) -> Unit,
+    onPedirDeNuevo: (Int) -> Unit
 ) {
     val activos by vm.activos.collectAsState()
     val historial by vm.historial.collectAsState()
@@ -72,6 +73,9 @@ fun MisPedidosScreen(
                         onClick = { onDetalle(pedido.pedido.id) },
                         onCancelar = if (pestana == 0) {
                             { porCancelar = pedido }
+                        } else null,
+                        onPedirDeNuevo = if (pestana == 1) {
+                            { onPedirDeNuevo(pedido.pedido.id) }
                         } else null
                     )
                 }

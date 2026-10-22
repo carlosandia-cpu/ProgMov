@@ -6,7 +6,8 @@ object Rutas {
 
     // Estudiante
     const val INICIO = "inicio"
-    const val NUEVO_PEDIDO = "nuevo_pedido"
+    const val NUEVO_PEDIDO = "nuevo_pedido?pedidoId={pedidoId}"
+    fun nuevoPedido(pedidoId: Int = 0) = if (pedidoId > 0) "nuevo_pedido?pedidoId=$pedidoId" else "nuevo_pedido"
     const val MIS_PEDIDOS = "mis_pedidos"
     const val TARIFAS = "tarifas"
     const val PERFIL = "perfil"

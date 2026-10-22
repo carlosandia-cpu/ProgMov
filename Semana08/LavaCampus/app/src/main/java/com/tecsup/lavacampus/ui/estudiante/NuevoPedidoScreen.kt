@@ -134,6 +134,7 @@ fun NuevoPedidoScreen(
                         if (resumen.isEmpty()) {
                             Text("Aún no eliges servicios")
                         } else {
+                            val descuento by vm.descuento.collectAsState()
                             resumen.forEach { linea ->
                                 Row(Modifier.fillMaxWidth()) {
                                     Text(
@@ -141,6 +142,12 @@ fun NuevoPedidoScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                     Text(linea.subtotal.soles())
+                                }
+                            }
+                            if (descuento > 0.0) {
+                                Row(Modifier.fillMaxWidth()) {
+                                    Text("Descuento (10%)", modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.error)
+                                    Text("-${descuento.soles()}", color = MaterialTheme.colorScheme.error)
                                 }
                             }
                             HorizontalDivider()

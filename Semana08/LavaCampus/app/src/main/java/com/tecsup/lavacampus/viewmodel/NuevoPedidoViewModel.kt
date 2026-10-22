@@ -19,12 +19,18 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 
-data class LineaResumen(val servicio: Servicio, val cantidad: Double, val subtotal: Double)
+data class LineaResumen(
+    val servicio: Servicio,
+    val cantidad: Double,
+    val subtotal: Double,
+    val descuento: Double = 0.0
+)
 
 class NuevoPedidoViewModel(
     private val repo: LavaRepository,
     private val prefs: PreferenciasStore,
-    private val usuarioId: Int
+    private val usuarioId: Int,
+    private val pedidoId: Int = 0
 ) : ViewModel() {
 
     val servicios: StateFlow<List<Servicio>> = repo.observarServiciosActivos()
@@ -44,17 +50,26 @@ class NuevoPedidoViewModel(
 
     private var enviando = false
 
-    /** Una línea por cada servicio elegido (cantidad > 0). */
+    /** Una línea por cada servicio elegido (cantidad > 0). 10 % de descuento en KG si supera 5 kg. */
     val resumen: StateFlow<List<LineaResumen>> = combine(servicios, _cantidades) { lista, cant ->
         lista.mapNotNull { s ->
             val c = cant[s.id] ?: 0.0
-            if (c > 0.0) LineaResumen(s, c, c * s.precio) else null
+            if (c > 0.0) {
+                val subtotal = c * s.precio
+                val descuentoLinea =
+                    if (s.unidad == Unidad.KG.name && c > 5.0) subtotal * 0.10 else 0.0
+                LineaResumen(s, c, subtotal, descuentoLinea)
+            } else null
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val total: StateFlow<Double> = resumen
-        .map { lineas -> lineas.sumOf { it.subtotal } }
+    val descuento: StateFlow<Double> = resumen
+        .map { lineas -> lineas.sumOf { it.descuento } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val total: StateFlow<Double> = combine(resumen, descuento) { lineas, desc ->
+        maxOf(0.0, lineas.sumOf { it.subtotal } - desc)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     /** Hoy + el mayor tiempo de entrega (24 h = 1 día). Si cae domingo, pasa al lunes. */
     val fechaEntrega: StateFlow<String?> = resumen.map { lineas ->
@@ -68,6 +83,26 @@ class NuevoPedidoViewModel(
             fecha.toString()
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    // "Pedir de nuevo": carga las líneas del pedido original (solo servicios activos,
+    // con los límites de cada unidad). Los precios que se muestran son los actuales.
+    init {
+        if (pedidoId > 0) {
+            viewModelScope.launch {
+                val original = repo.observarPedido(pedidoId).first() ?: return@launch
+                val mapa = mutableMapOf<Int, Double>()
+                for (linea in original.detalles) {
+                    val servicio = linea.servicio
+                    if (servicio.activo) {
+                        val unidad = Unidad.desde(servicio.unidad)
+                        mapa[servicio.id] = linea.detalle.cantidad
+                            .coerceIn(unidad.minimo, unidad.maximo)
+                    }
+                }
+                _cantidades.value = mapa
+            }
+        }
+    }
 
     /** KG: pasos de 0.5, mínimo 1.0, máximo 10.0. PRENDA/UNIDAD: pasos de 1, máximo 30. Cantidad 0 = apagado. */
     fun cambiarCantidad(servicioId: Int, delta: Double) {
@@ -110,6 +145,7 @@ class NuevoPedidoViewModel(
                 usuarioId = usuarioId,
                 lineas = lineas.map { LineaPedido(it.servicio.id, it.cantidad) },
                 fechaEntrega = fecha,
+                descuento = descuento.value,
                 nota = _nota.value.trim()
             )
             enviando = false

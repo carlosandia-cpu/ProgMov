@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,7 +33,8 @@ fun PedidoCard(
     item: PedidoConDetalle,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onCancelar: (() -> Unit)? = null
+    onCancelar: (() -> Unit)? = null,
+    onPedirDeNuevo: (() -> Unit)? = null
 ) {
     val pedido = item.pedido
     val estado = EstadoPedido.desde(pedido.estado)
@@ -94,6 +96,12 @@ fun PedidoCard(
             if (onCancelar != null && estado == EstadoPedido.RECIBIDO) {
                 TextButton(onClick = onCancelar) {
                     Text("Cancelar", color = MaterialTheme.colorScheme.error)
+                }
+            }
+            if (onPedirDeNuevo != null) {
+                Spacer(Modifier.height(4.dp))
+                FilledTonalButton(onClick = onPedirDeNuevo) {
+                    Text("Pedir de nuevo")
                 }
             }
         }

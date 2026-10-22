@@ -1,5 +1,6 @@
 package com.tecsup.lavacampus.ui.administrador
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,6 +49,7 @@ fun BandejaScreen(
     val pedidos by vm.pedidos.collectAsState()
     val filtro by vm.filtro.collectAsState()
     val busqueda by vm.busqueda.collectAsState()
+    val idsAtrasados by vm.idsAtrasados.collectAsState()
 
     Column(modifier.fillMaxSize()) {
         OutlinedTextField(
@@ -86,6 +88,7 @@ fun BandejaScreen(
                 items(pedidos, key = { it.pedido.id }) { item ->
                     TarjetaBandeja(
                         item = item,
+                        esAtrasado = item.pedido.id in idsAtrasados,
                         onAbrir = { onGestion(item.pedido.id) },
                         onIniciar = { vm.iniciar(item) }
                     )
@@ -98,6 +101,7 @@ fun BandejaScreen(
 @Composable
 private fun TarjetaBandeja(
     item: PedidoConDetalle,
+    esAtrasado: Boolean,
     onAbrir: () -> Unit,
     onIniciar: () -> Unit
 ) {
@@ -111,13 +115,30 @@ private fun TarjetaBandeja(
         onClick = onAbrir,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (esAtrasado) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+            else MaterialTheme.colorScheme.surface
+        ),
+        border = if (esAtrasado) BorderStroke(1.5.dp, MaterialTheme.colorScheme.error) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Pedido #${pedido.id} · ${item.usuario.nombre}", fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("Pedido #${pedido.id} · ${item.usuario.nombre}", fontWeight = FontWeight.Bold)
+                        if (esAtrasado) {
+                            Text(
+                                "Atrasado",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                     Text(
                         detalle,
                         style = MaterialTheme.typography.bodySmall,

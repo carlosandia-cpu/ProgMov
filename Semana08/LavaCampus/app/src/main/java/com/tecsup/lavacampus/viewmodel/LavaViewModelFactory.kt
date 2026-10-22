@@ -16,7 +16,7 @@ class LavaViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when {
         modelClass.isAssignableFrom(SesionViewModel::class.java) -> SesionViewModel(repo, prefs) as T
         modelClass.isAssignableFrom(InicioViewModel::class.java) -> InicioViewModel(repo, usuarioId) as T
-        modelClass.isAssignableFrom(NuevoPedidoViewModel::class.java) -> NuevoPedidoViewModel(repo, prefs, usuarioId) as T
+        modelClass.isAssignableFrom(NuevoPedidoViewModel::class.java) -> NuevoPedidoViewModel(repo, prefs, usuarioId, pedidoId) as T
         modelClass.isAssignableFrom(DetallePedidoViewModel::class.java) -> DetallePedidoViewModel(repo, pedidoId) as T
         modelClass.isAssignableFrom(MisPedidosViewModel::class.java) -> MisPedidosViewModel(repo, usuarioId) as T
         modelClass.isAssignableFrom(TarifasViewModel::class.java) -> TarifasViewModel(repo) as T

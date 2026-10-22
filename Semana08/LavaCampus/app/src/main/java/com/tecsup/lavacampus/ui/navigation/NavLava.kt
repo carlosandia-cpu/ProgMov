@@ -138,7 +138,7 @@ fun NavLava(
                         usuario = u,
                         vm = vm,
                         modifier = Modifier.padding(padding),
-                        onNuevoPedido = { nav.navigate(Rutas.NUEVO_PEDIDO) },
+                        onNuevoPedido = { nav.navigate(Rutas.nuevoPedido()) },
                         onMisPedidos = { irATab(Rutas.MIS_PEDIDOS) },
                         onTarifas = { irATab(Rutas.TARIFAS) },
                         onDetalle = { id -> nav.navigate(Rutas.detalle(id)) }
@@ -154,7 +154,7 @@ fun NavLava(
                     onIr = { irATab(it) },
                     titulo = "Mis pedidos",
                     fab = {
-                        FloatingActionButton(onClick = { nav.navigate(Rutas.NUEVO_PEDIDO) }) {
+                        FloatingActionButton(onClick = { nav.navigate(Rutas.nuevoPedido()) }) {
                             Icon(Icons.Default.Add, contentDescription = "Nuevo pedido")
                         }
                     }
@@ -162,7 +162,8 @@ fun NavLava(
                     MisPedidosScreen(
                         vm = vm,
                         modifier = Modifier.padding(padding),
-                        onDetalle = { id -> nav.navigate(Rutas.detalle(id)) }
+                        onDetalle = { id -> nav.navigate(Rutas.detalle(id)) },
+                        onPedirDeNuevo = { id -> nav.navigate(Rutas.nuevoPedido(id)) }
                     )
                 }
             }
@@ -188,9 +189,16 @@ fun NavLava(
                 }
             }
         }
-        composable(Rutas.NUEVO_PEDIDO) {
+        composable(
+            route = Rutas.NUEVO_PEDIDO,
+            arguments = listOf(navArgument("pedidoId") {
+                type = NavType.IntType
+                defaultValue = 0
+            })
+        ) { entrada ->
+            val pedidoId = entrada.arguments?.getInt("pedidoId") ?: 0
             usuario?.let { u ->
-                val vm: NuevoPedidoViewModel = viewModel(factory = fabrica(usuarioId = u.id))
+                val vm: NuevoPedidoViewModel = viewModel(factory = fabrica(usuarioId = u.id, pedidoId = pedidoId))
                 NuevoPedidoScreen(
                     vm = vm,
                     onAtras = { nav.popBackStack() },

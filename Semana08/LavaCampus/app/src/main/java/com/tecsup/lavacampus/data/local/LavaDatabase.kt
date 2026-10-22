@@ -15,7 +15,7 @@ import com.tecsup.lavacampus.data.local.entity.Usuario
 
 @Database(
     entities = [Servicio::class, Usuario::class, Pedido::class, DetallePedido::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class LavaDatabase : RoomDatabase() {
@@ -32,7 +32,9 @@ abstract class LavaDatabase : RoomDatabase() {
                 context.applicationContext,
                 LavaDatabase::class.java,
                 "lavacampus.db"
-            ).build().also { INSTANCE = it }
+            )
+                .fallbackToDestructiveMigration(true)
+                .build().also { INSTANCE = it }
         }
     }
 }

@@ -54,6 +54,7 @@ class LavaRepositoryRoom(private val db: LavaDatabase) : LavaRepository {
         usuarioId: Int,
         lineas: List<LineaPedido>,
         fechaEntrega: String,
+        descuento: Double,
         nota: String
     ): Long = db.withTransaction {
         // Congela el precio de cada servicio en el momento del pedido
@@ -63,7 +64,8 @@ class LavaRepositoryRoom(private val db: LavaDatabase) : LavaRepository {
             val subtotal = linea.cantidad * servicio.precio
             Triple(linea, servicio.precio, subtotal)
         }
-        val total = detallesBase.sumOf { it.third }
+        val sumaSubtotales = detallesBase.sumOf { it.third }
+        val total = sumaSubtotales - descuento
 
         val pedidoId = pedidoDao.insertar(
             Pedido(
@@ -71,7 +73,8 @@ class LavaRepositoryRoom(private val db: LavaDatabase) : LavaRepository {
                 fechaRegistro = LocalDate.now().toString(),
                 fechaEntrega = fechaEntrega,
                 estado = EstadoPedido.RECIBIDO.name,
-                total = total,
+                total = maxOf(0.0, total),
+                descuento = descuento,
                 casillero = null,
                 pagado = false,
                 nota = nota
@@ -122,4 +125,7 @@ class LavaRepositoryRoom(private val db: LavaDatabase) : LavaRepository {
 
     override fun observarIngresosPorServicio(fechaInicio: String): Flow<List<IngresoServicio>> =
         detalleDao.observarIngresosPorServicio(fechaInicio)
+
+    override fun observarIdsAtrasados(hoy: String): Flow<List<Int>> =
+        pedidoDao.observarIdsAtrasados(hoy)
 }

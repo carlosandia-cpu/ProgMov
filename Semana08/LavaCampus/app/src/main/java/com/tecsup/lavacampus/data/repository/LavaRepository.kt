@@ -29,6 +29,7 @@ interface LavaRepository {
         usuarioId: Int,
         lineas: List<LineaPedido>,
         fechaEntrega: String,
+        descuento: Double,
         nota: String
     ): Long
     suspend fun contarActivos(usuarioId: Int): Int
@@ -44,4 +45,5 @@ interface LavaRepository {
     fun observarCantidadPorEstado(estado: EstadoPedido): Flow<Int>
     fun observarIngresosDesde(fechaInicio: String): Flow<Double>
     fun observarIngresosPorServicio(fechaInicio: String): Flow<List<IngresoServicio>>
+    fun observarIdsAtrasados(hoy: String): Flow<List<Int>>
 }
