@@ -25,6 +25,9 @@ class SesionViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _aviso = MutableStateFlow<String?>(null)
+    val aviso: StateFlow<String?> = _aviso.asStateFlow()
+
     val modoOscuro: StateFlow<Boolean> = prefs.modoOscuro
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
@@ -50,6 +53,7 @@ class SesionViewModel(
                     }"
                 else -> {
                     _error.value = null
+                    _aviso.value = null
                     _usuarioActual.value = usuario
                     prefs.guardarSesion(rolSeleccionado, usuario.id)
                     onExito(rolSeleccionado)
@@ -94,8 +98,15 @@ class SesionViewModel(
         viewModelScope.launch { prefs.guardarRecibirPedidos(valor) }
     }
 
+    /** Mensaje positivo para el login (por ejemplo, "Cuenta creada"). */
+    fun mostrarAviso(texto: String) {
+        _aviso.value = texto
+    }
+
+    /** Se llama al escribir o cambiar de pestaña: borra el error y el aviso. */
     fun limpiarError() {
         _error.value = null
+        _aviso.value = null
     }
 
     fun cerrarSesion() {

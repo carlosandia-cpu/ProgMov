@@ -47,6 +47,7 @@ import com.tecsup.lavacampus.ui.estudiante.LoginScreen
 import com.tecsup.lavacampus.ui.estudiante.MisPedidosScreen
 import com.tecsup.lavacampus.ui.estudiante.NuevoPedidoScreen
 import com.tecsup.lavacampus.ui.estudiante.PerfilScreen
+import com.tecsup.lavacampus.ui.estudiante.RegistroScreen
 import com.tecsup.lavacampus.ui.estudiante.SplashScreen
 import com.tecsup.lavacampus.ui.estudiante.TarifasScreen
 import com.tecsup.lavacampus.viewmodel.BandejaViewModel
@@ -59,6 +60,7 @@ import com.tecsup.lavacampus.viewmodel.MisPedidosViewModel
 import com.tecsup.lavacampus.viewmodel.NuevoPedidoViewModel
 import com.tecsup.lavacampus.viewmodel.PanelViewModel
 import com.tecsup.lavacampus.viewmodel.PerfilViewModel
+import com.tecsup.lavacampus.viewmodel.RegistroViewModel
 import com.tecsup.lavacampus.viewmodel.ServiciosViewModel
 import com.tecsup.lavacampus.viewmodel.SesionViewModel
 import com.tecsup.lavacampus.viewmodel.TarifasViewModel
@@ -123,10 +125,25 @@ fun NavLava(
             }
         }
         composable(Rutas.LOGIN) {
-            LoginScreen(sesionVm) { rol ->
+            LoginScreen(
+                vm = sesionVm,
+                onRegistro = { nav.navigate(Rutas.REGISTRO) }
+            ) { rol ->
                 val destino = if (rol == Rol.ADMIN) Rutas.PANEL else Rutas.INICIO
                 nav.navigate(destino) { popUpTo(Rutas.LOGIN) { inclusive = true } }
             }
+        }
+        composable(Rutas.REGISTRO) {
+            val vm: RegistroViewModel = viewModel(factory = fabrica())
+            RegistroScreen(
+                vm = vm,
+                onAtras = { nav.popBackStack() },
+                onRegistrado = {
+                    // Registrar no inicia sesión: vuelve al login con un aviso
+                    sesionVm.mostrarAviso("Cuenta creada. Inicia sesión con tu correo y contraseña.")
+                    nav.popBackStack()
+                }
+            )
         }
 
         // ---------- Estudiante ----------
