@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import com.andia.campusgps.model.Lugar
 import com.andia.campusgps.model.LugarConDistancia
 import com.andia.campusgps.model.UbicacionUi
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -22,6 +23,7 @@ fun MapaUbicacion(
     estado: UbicacionUi,
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
+    masCercano: Lugar?,
     modifier: Modifier = Modifier
 ) {
 
@@ -32,7 +34,7 @@ fun MapaUbicacion(
         )
     }
 
-    // Mover la cámara a la ubicación del usuario
+    // Mover la cámara a la ubicación actual
     LaunchedEffect(estado) {
         if (estado is UbicacionUi.Lista) {
             val posicion = LatLng(
@@ -51,6 +53,7 @@ fun MapaUbicacion(
 
     // Mover la cámara al lugar seleccionado
     LaunchedEffect(seleccionado) {
+
         val lugar = lugares.firstOrNull {
             it.lugar.id == seleccionado
         }?.lugar ?: return@LaunchedEffect
@@ -74,7 +77,7 @@ fun MapaUbicacion(
         )
     ) {
 
-        // Marcador rojo del usuario
+        // Marcador rojo: ubicación del usuario
         if (estado is UbicacionUi.Lista) {
             Marker(
                 state = rememberUpdatedMarkerState(
@@ -87,7 +90,7 @@ fun MapaUbicacion(
             )
         }
 
-        // Marcadores azules de los cinco lugares
+        // Marcadores de los lugares del campus
         lugares.forEach { item ->
 
             val lugar = item.lugar
@@ -101,19 +104,27 @@ fun MapaUbicacion(
                     )
                 )
 
-                // Mostrar el nombre al seleccionar
+                // Mostrar el nombre del lugar seleccionado
                 LaunchedEffect(seleccionado) {
                     if (seleccionado == lugar.id) {
                         markerState.showInfoWindow()
                     }
                 }
 
+                // Commit 8: verde para el más cercano
+                val colorMarcador =
+                    if (lugar.id == masCercano?.id) {
+                        BitmapDescriptorFactory.HUE_GREEN
+                    } else {
+                        BitmapDescriptorFactory.HUE_AZURE
+                    }
+
                 Marker(
                     state = markerState,
                     title = lugar.nombre,
                     snippet = lugar.categoria,
                     icon = BitmapDescriptorFactory.defaultMarker(
-                        BitmapDescriptorFactory.HUE_AZURE
+                        colorMarcador
                     )
                 )
             }

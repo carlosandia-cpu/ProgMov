@@ -5,13 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andia.campusgps.data.LugaresRepository
 import com.andia.campusgps.data.UbicacionRepository
+import com.andia.campusgps.model.Lugar
 import com.andia.campusgps.model.LugarConDistancia
 import com.andia.campusgps.model.Posicion
 import com.andia.campusgps.model.UbicacionUi
 import com.andia.campusgps.util.distanciaMetros
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MapaViewModel(
@@ -40,6 +44,20 @@ class MapaViewModel(
     val seleccionado: StateFlow<Int?> =
         _seleccionado.asStateFlow()
 
+    // Commit 8: lugar más cercano
+    val masCercano: StateFlow<Lugar?> =
+        lugares
+            .map { lista ->
+                lista.firstOrNull {
+                    it.metros != null
+                }?.lugar
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = null
+            )
+
     fun buscar() {
         _estado.value = UbicacionUi.Buscando
 
@@ -63,12 +81,10 @@ class MapaViewModel(
         )
     }
 
-    // Commit 7: seleccionar un lugar
+    // Seleccionar un lugar desde la lista o el botón
     fun seleccionar(id: Int?) {
         _seleccionado.value = id
     }
-
-    // Commit 8: implementar masCercano
 
     private fun actualizarDistancias(pos: Posicion) {
         _lugares.value = lugaresRepo.obtenerLugares()

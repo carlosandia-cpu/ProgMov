@@ -13,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.andia.campusgps.model.UbicacionUi
+import com.andia.campusgps.util.formatearDistancia
 import com.andia.campusgps.viewmodel.MapaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,14 +27,14 @@ fun PantallaMapa(vm: MapaViewModel) {
     val estado by vm.estado.collectAsState()
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
+    val masCercano by vm.masCercano.collectAsState()
 
     val contexto = LocalContext.current
 
-    // Solicitud de permisos de ubicación
+    // Permisos de ubicación
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { resultado ->
-
         if (resultado.values.any { it }) {
             vm.buscar()
         } else {
@@ -69,6 +71,10 @@ fun PantallaMapa(vm: MapaViewModel) {
         }
     }
 
+    val distanciaCercana = lugares.firstOrNull {
+        it.lugar.id == masCercano?.id
+    }?.metros
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -95,11 +101,12 @@ fun PantallaMapa(vm: MapaViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Mapa en la parte superior
+            // Mapa superior
             MapaUbicacion(
                 estado = estado,
                 lugares = lugares,
                 seleccionado = seleccionado,
+                masCercano = masCercano,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -109,9 +116,9 @@ fun PantallaMapa(vm: MapaViewModel) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
 
                 // Botón principal
@@ -129,7 +136,37 @@ fun PantallaMapa(vm: MapaViewModel) {
                     )
                 }
 
-                // Estado de ubicación
+                // Botón secundario del Commit 8
+                OutlinedButton(
+                    onClick = {
+                        masCercano?.let { lugar ->
+                            vm.seleccionar(lugar.id)
+                        }
+                    },
+                    enabled = masCercano != null,
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    Text("Ir al más cercano")
+                }
+
+                // Información del más cercano
+                if (masCercano != null) {
+                    Text(
+                        text = "Más cercano: ${masCercano!!.nombre} " +
+                                "(${distanciaCercana?.let {
+                                    formatearDistancia(it)
+                                } ?: "Sin calcular"})",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(
+                            horizontal = 16.dp
+                        )
+                    )
+                }
+
+                // Estado actual de ubicación
                 when (val actual = estado) {
 
                     is UbicacionUi.Lista -> {
@@ -137,7 +174,8 @@ fun PantallaMapa(vm: MapaViewModel) {
                             text = "Latitud: ${actual.posicion.latitud}  ·  " +
                                     "Longitud: ${actual.posicion.longitud}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color =
+                                MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -165,12 +203,13 @@ fun PantallaMapa(vm: MapaViewModel) {
                         Text(
                             text = "Pulsa el botón para empezar",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color =
+                                MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // Lista de lugares debajo del mapa
+                // Lista inferior de cinco lugares
                 ListaLugares(
                     lugares = lugares,
                     seleccionado = seleccionado,
