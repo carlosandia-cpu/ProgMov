@@ -21,6 +21,8 @@ import com.andia.campusgps.viewmodel.MapaViewModel
 @Composable
 fun PantallaMapa(vm: MapaViewModel) {
     val estado by vm.estado.collectAsState()
+    val lugares by vm.lugares.collectAsState()
+    val seleccionado by vm.seleccionado.collectAsState()
     val contexto = LocalContext.current
 
     val lanzador = rememberLauncherForActivityResult(
@@ -64,50 +66,66 @@ fun PantallaMapa(vm: MapaViewModel) {
         Column(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(
-                onClick = { alPulsar() },
-                enabled = estado !is UbicacionUi.Buscando,
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Text(
-                    if (estado is UbicacionUi.Buscando) "Buscando..."
-                    else "Obtener mi ubicación"
-                )
-            }
+            // Mapa: ocupa el espacio libre arriba
+            MapaUbicacion(
+                estado = estado,
+                lugares = lugares,
+                seleccionado = seleccionado,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
 
-            when (val e = estado) {
-                is UbicacionUi.Lista -> Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text("Latitud: ${e.posicion.latitud}")
-                        Text("Longitud: ${e.posicion.longitud}")
-                    }
-                }
-                is UbicacionUi.Error -> Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = { alPulsar() },
+                    enabled = estado !is UbicacionUi.Buscando,
+                    shape = RoundedCornerShape(24.dp)
                 ) {
                     Text(
-                        e.mensaje,
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer
+                        if (estado is UbicacionUi.Buscando) "Buscando..."
+                        else "Obtener mi ubicación"
                     )
                 }
-                else -> Text(
-                    "Pulsa el botón para empezar",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+                when (val e = estado) {
+                    is UbicacionUi.Lista -> Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text("Latitud: ${e.posicion.latitud}")
+                            Text("Longitud: ${e.posicion.longitud}")
+                        }
+                    }
+                    is UbicacionUi.Error -> Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            e.mensaje,
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    else -> Text(
+                        "Pulsa el botón para empezar",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
