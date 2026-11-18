@@ -1,12 +1,15 @@
 
 package com.andia.campusgps.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andia.campusgps.data.LugaresRepository
 import com.andia.campusgps.data.UbicacionRepository
 import com.andia.campusgps.model.LugarConDistancia
+import com.andia.campusgps.model.Posicion
 import com.andia.campusgps.model.UbicacionUi
+import com.andia.campusgps.util.distanciaMetros
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,8 +48,7 @@ class MapaViewModel(
             ubicacionRepo.obtenerPosicion()
                 .onSuccess { posicion ->
                     _estado.value = UbicacionUi.Lista(posicion)
-
-                    // Paso 5: actualizarDistancias(posicion)
+                    actualizarDistancias(posicion)
                 }
                 .onFailure { error ->
                     _estado.value = UbicacionUi.Error(
@@ -62,8 +64,27 @@ class MapaViewModel(
         )
     }
 
-    // Paso 6: seleccionar(id: Int?)
-    // Paso 7: masCercano
+    // Paso 6 del PDF: seleccionar(id: Int?)
+    // Paso 7 del PDF: masCercano
+
+    private fun actualizarDistancias(pos: Posicion) {
+        _lugares.value = lugaresRepo.obtenerLugares()
+            .map { lugar ->
+                LugarConDistancia(
+                    lugar,
+                    distanciaMetros(pos, lugar)
+                )
+            }
+            .sortedBy { it.metros }
+
+        // Verificación de distancias en Logcat
+        _lugares.value.forEach { item ->
+            Log.d(
+                "CampusGPS",
+                "${item.lugar.nombre}: ${item.metros} metros"
+            )
+        }
+    }
 
     private fun mensajeDe(e: Throwable): String =
         when (e) {
