@@ -8,6 +8,7 @@ import com.andia.campusgps.data.UbicacionRepository
 import com.andia.campusgps.model.Lugar
 import com.andia.campusgps.model.LugarConDistancia
 import com.andia.campusgps.model.Posicion
+import com.andia.campusgps.model.TipoError
 import com.andia.campusgps.model.UbicacionUi
 import com.andia.campusgps.util.distanciaMetros
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,22 +45,28 @@ class MapaViewModel(
     val seleccionado: StateFlow<Int?> =
         _seleccionado.asStateFlow()
 
-    // Commit 8: lugar más cercano
     val masCercano: StateFlow<Lugar?> =
-        lugares
-            .map { lista ->
-                lista.firstOrNull {
-                    it.metros != null
-                }?.lugar
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = null
-            )
+        lugares.map { lista ->
+            lista.firstOrNull {
+                it.metros != null
+            }?.lugar
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     fun buscar() {
+
         _estado.value = UbicacionUi.Buscando
+
+        if (!ubicacionRepo.playServicesDisponible()) {
+            mostrarError(
+                "Este dispositivo no tiene Google Play Services",
+                TipoError.SIN_PLAY_SERVICES
+            )
+            return
+        }
 
         viewModelScope.launch {
             ubicacionRepo.obtenerPosicion()
@@ -68,20 +75,18 @@ class MapaViewModel(
                     actualizarDistancias(posicion)
                 }
                 .onFailure { error ->
-                    _estado.value = UbicacionUi.Error(
-                        mensajeDe(error)
-                    )
+                    manejarError(error)
                 }
         }
     }
 
     fun permisoDenegado() {
-        _estado.value = UbicacionUi.Error(
-            "Sin permiso de ubicación no puedo mostrar dónde estás"
+        mostrarError(
+            "Sin permiso de ubicación no puedo mostrar dónde estás",
+            TipoError.SIN_PERMISO
         )
     }
 
-    // Seleccionar un lugar desde la lista o el botón
     fun seleccionar(id: Int?) {
         _seleccionado.value = id
     }
@@ -97,12 +102,39 @@ class MapaViewModel(
             .sortedBy { it.metros }
     }
 
-    private fun mensajeDe(e: Throwable): String =
-        when (e) {
-            is SecurityException ->
-                "Falta el permiso de ubicación"
+    private fun manejarError(error: Throwable) {
+        when (error) {
 
-            else ->
-                e.message ?: "No se pudo obtener la ubicación"
+            is SecurityException -> {
+                mostrarError(
+                    "Sin permiso de ubicación no puedo mostrar dónde estás",
+                    TipoError.SIN_PERMISO
+                )
+            }
+
+            is IllegalStateException -> {
+                mostrarError(
+                    "Activa el GPS e intenta de nuevo",
+                    TipoError.GPS_APAGADO
+                )
+            }
+
+            else -> {
+                mostrarError(
+                    error.message ?: "No se pudo obtener la ubicación",
+                    TipoError.OTRO
+                )
+            }
         }
+    }
+
+    private fun mostrarError(
+        mensaje: String,
+        tipo: TipoError
+    ) {
+        _estado.value = UbicacionUi.Error(
+            mensaje = mensaje,
+            tipo = tipo
+        )
+    }
 }

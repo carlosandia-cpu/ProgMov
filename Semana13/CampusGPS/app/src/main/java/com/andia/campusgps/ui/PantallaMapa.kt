@@ -2,7 +2,10 @@
 package com.andia.campusgps.ui
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -31,7 +34,6 @@ fun PantallaMapa(vm: MapaViewModel) {
 
     val contexto = LocalContext.current
 
-    // Permisos de ubicación
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { resultado ->
@@ -43,19 +45,17 @@ fun PantallaMapa(vm: MapaViewModel) {
     }
 
     fun tienePermiso(): Boolean {
-        val permisoPreciso =
-            ContextCompat.checkSelfPermission(
-                contexto,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+        val preciso = ContextCompat.checkSelfPermission(
+            contexto,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
 
-        val permisoAproximado =
-            ContextCompat.checkSelfPermission(
-                contexto,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+        val aproximado = ContextCompat.checkSelfPermission(
+            contexto,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
 
-        return permisoPreciso || permisoAproximado
+        return preciso || aproximado
     }
 
     fun alPulsar() {
@@ -71,9 +71,27 @@ fun PantallaMapa(vm: MapaViewModel) {
         }
     }
 
+    fun abrirAjustes() {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+        ).apply {
+            data = Uri.fromParts(
+                "package",
+                contexto.packageName,
+                null
+            )
+        }
+
+        contexto.startActivity(intent)
+    }
+
     val distanciaCercana = lugares.firstOrNull {
         it.lugar.id == masCercano?.id
     }?.metros
+
+    val textoDistancia = distanciaCercana?.let {
+        formatearDistancia(it)
+    } ?: "Sin calcular"
 
     Scaffold(
         topBar = {
@@ -85,10 +103,8 @@ fun PantallaMapa(vm: MapaViewModel) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor =
-                        MaterialTheme.colorScheme.primary,
-                    titleContentColor =
-                        MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -101,7 +117,6 @@ fun PantallaMapa(vm: MapaViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Mapa superior
             MapaUbicacion(
                 estado = estado,
                 lugares = lugares,
@@ -112,7 +127,6 @@ fun PantallaMapa(vm: MapaViewModel) {
                     .fillMaxWidth()
             )
 
-            // Panel inferior
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -121,14 +135,13 @@ fun PantallaMapa(vm: MapaViewModel) {
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
 
-                // Botón principal
                 Button(
                     onClick = { alPulsar() },
                     enabled = estado !is UbicacionUi.Buscando,
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     Text(
-                        text = if (estado is UbicacionUi.Buscando) {
+                        if (estado is UbicacionUi.Buscando) {
                             "Buscando..."
                         } else {
                             "Obtener mi ubicación"
@@ -136,7 +149,6 @@ fun PantallaMapa(vm: MapaViewModel) {
                     )
                 }
 
-                // Botón secundario del Commit 8
                 OutlinedButton(
                     onClick = {
                         masCercano?.let { lugar ->
@@ -149,67 +161,47 @@ fun PantallaMapa(vm: MapaViewModel) {
                     Text("Ir al más cercano")
                 }
 
-                // Información del más cercano
                 if (masCercano != null) {
                     Text(
-                        text = "Más cercano: ${masCercano!!.nombre} " +
-                                "(${distanciaCercana?.let {
-                                    formatearDistancia(it)
-                                } ?: "Sin calcular"})",
+                        text = "Más cercano: ${masCercano?.nombre} " +
+                                "($textoDistancia)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(
-                            horizontal = 16.dp
-                        )
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
 
-                // Estado actual de ubicación
                 when (val actual = estado) {
 
                     is UbicacionUi.Lista -> {
                         Text(
-                            text = "Latitud: ${actual.posicion.latitud}  ·  " +
+                            text = "Latitud: ${actual.posicion.latitud} · " +
                                     "Longitud: ${actual.posicion.longitud}",
                             style = MaterialTheme.typography.bodySmall,
-                            color =
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
                     is UbicacionUi.Error -> {
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor =
-                                    MaterialTheme.colorScheme.errorContainer
-                            ),
-                            modifier = Modifier.padding(
-                                horizontal = 16.dp
-                            )
-                        ) {
-                            Text(
-                                text = actual.mensaje,
-                                modifier = Modifier.padding(12.dp),
-                                color =
-                                    MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
+                        MensajeError(
+                            error = actual,
+                            onAbrirAjustes = { abrirAjustes() },
+                            onReintentar = { alPulsar() },
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
                     }
 
                     else -> {
                         Text(
                             text = "Pulsa el botón para empezar",
                             style = MaterialTheme.typography.bodySmall,
-                            color =
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // Lista inferior de cinco lugares
                 ListaLugares(
                     lugares = lugares,
                     seleccionado = seleccionado,
