@@ -1,108 +1,112 @@
-
 package com.andia.campusgps.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.andia.campusgps.model.UbicacionUi
 import com.andia.campusgps.viewmodel.MapaViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaMapa(
-    vm: MapaViewModel
-) {
+fun PantallaMapa(vm: MapaViewModel) {
     val estado by vm.estado.collectAsState()
+    val contexto = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
+    val lanzador = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { resultado ->
+        if (resultado.values.any { it }) vm.buscar() else vm.permisoDenegado()
+    }
 
-        Text(
-            text = "CampusGPS",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
+    fun tienePermiso(): Boolean =
+        ContextCompat.checkSelfPermission(
+            contexto, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    contexto, Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "Explora los lugares de tu campus",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = { vm.buscar() },
-            enabled = estado !is UbicacionUi.Buscando,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Obtener mi ubicación")
+    fun alPulsar() {
+        if (tienePermiso()) {
+            vm.buscar()
+        } else {
+            lanzador.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
+    }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        when (val actual = estado) {
-
-            is UbicacionUi.Inicial -> {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("CampusGPS", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Button(
+                onClick = { alPulsar() },
+                enabled = estado !is UbicacionUi.Buscando,
+                shape = RoundedCornerShape(24.dp)
+            ) {
                 Text(
-                    text = "Presiona el botón para buscar tu ubicación.",
-                    textAlign = TextAlign.Center
+                    if (estado is UbicacionUi.Buscando) "Buscando..."
+                    else "Obtener mi ubicación"
                 )
             }
 
-            is UbicacionUi.Buscando -> {
-                CircularProgressIndicator()
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text("Buscando ubicación...")
-            }
-
-            is UbicacionUi.Lista -> {
-                Text(
-                    text = "Ubicación obtenida correctamente",
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Latitud: ${actual.posicion.latitud}"
-                )
-
-                Text(
-                    text = "Longitud: ${actual.posicion.longitud}"
-                )
-            }
-
-            is UbicacionUi.Error -> {
-                Text(
-                    text = actual.mensaje,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center
+            when (val e = estado) {
+                is UbicacionUi.Lista -> Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("Latitud: ${e.posicion.latitud}")
+                        Text("Longitud: ${e.posicion.longitud}")
+                    }
+                }
+                is UbicacionUi.Error -> Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        e.mensaje,
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+                else -> Text(
+                    "Pulsa el botón para empezar",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
