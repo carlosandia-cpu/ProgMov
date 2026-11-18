@@ -1,3 +1,4 @@
+
 package com.andia.campusgps.ui
 
 import androidx.compose.runtime.Composable
@@ -23,41 +24,92 @@ fun MapaUbicacion(
     seleccionado: Int?,
     modifier: Modifier = Modifier
 ) {
+
     val camara = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(-12.0464, -77.0428), 12f)
+        position = CameraPosition.fromLatLngZoom(
+            LatLng(-12.0464, -77.0428),
+            12f
+        )
     }
 
-    // Cuando llega la ubicación, la cámara viaja hasta ella
+    // Mover la cámara a la ubicación del usuario
     LaunchedEffect(estado) {
         if (estado is UbicacionUi.Lista) {
-            val pos = LatLng(estado.posicion.latitud, estado.posicion.longitud)
-            camara.animate(CameraUpdateFactory.newLatLngZoom(pos, 16f))
+            val posicion = LatLng(
+                estado.posicion.latitud,
+                estado.posicion.longitud
+            )
+
+            camara.animate(
+                CameraUpdateFactory.newLatLngZoom(
+                    posicion,
+                    16f
+                )
+            )
         }
+    }
+
+    // Mover la cámara al lugar seleccionado
+    LaunchedEffect(seleccionado) {
+        val lugar = lugares.firstOrNull {
+            it.lugar.id == seleccionado
+        }?.lugar ?: return@LaunchedEffect
+
+        camara.animate(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(
+                    lugar.latitud,
+                    lugar.longitud
+                ),
+                17f
+            )
+        )
     }
 
     GoogleMap(
         modifier = modifier,
         cameraPositionState = camara,
-        uiSettings = MapUiSettings(zoomControlsEnabled = false)
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = false
+        )
     ) {
-        // Marcador propio: rojo por defecto
+
+        // Marcador rojo del usuario
         if (estado is UbicacionUi.Lista) {
             Marker(
                 state = rememberUpdatedMarkerState(
-                    position = LatLng(estado.posicion.latitud, estado.posicion.longitud)
+                    position = LatLng(
+                        estado.posicion.latitud,
+                        estado.posicion.longitud
+                    )
                 ),
                 title = "Estás aquí"
             )
         }
 
-        // Un marcador azul por cada lugar del campus
+        // Marcadores azules de los cinco lugares
         lugares.forEach { item ->
+
             val lugar = item.lugar
+
             key(lugar.id) {
+
+                val markerState = rememberUpdatedMarkerState(
+                    position = LatLng(
+                        lugar.latitud,
+                        lugar.longitud
+                    )
+                )
+
+                // Mostrar el nombre al seleccionar
+                LaunchedEffect(seleccionado) {
+                    if (seleccionado == lugar.id) {
+                        markerState.showInfoWindow()
+                    }
+                }
+
                 Marker(
-                    state = rememberUpdatedMarkerState(
-                        position = LatLng(lugar.latitud, lugar.longitud)
-                    ),
+                    state = markerState,
                     title = lugar.nombre,
                     snippet = lugar.categoria,
                     icon = BitmapDescriptorFactory.defaultMarker(

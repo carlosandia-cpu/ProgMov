@@ -1,7 +1,6 @@
 
 package com.andia.campusgps.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andia.campusgps.data.LugaresRepository
@@ -64,26 +63,22 @@ class MapaViewModel(
         )
     }
 
-    // Paso 6 del PDF: seleccionar(id: Int?)
-    // Paso 7 del PDF: masCercano
+    // Commit 7: seleccionar un lugar
+    fun seleccionar(id: Int?) {
+        _seleccionado.value = id
+    }
+
+    // Commit 8: implementar masCercano
 
     private fun actualizarDistancias(pos: Posicion) {
         _lugares.value = lugaresRepo.obtenerLugares()
             .map { lugar ->
                 LugarConDistancia(
-                    lugar,
-                    distanciaMetros(pos, lugar)
+                    lugar = lugar,
+                    metros = distanciaMetros(pos, lugar)
                 )
             }
             .sortedBy { it.metros }
-
-        // Verificación de distancias en Logcat
-        _lugares.value.forEach { item ->
-            Log.d(
-                "CampusGPS",
-                "${item.lugar.nombre}: ${item.metros} metros"
-            )
-        }
     }
 
     private fun mensajeDe(e: Throwable): String =
