@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -24,6 +25,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,9 +45,14 @@ import com.tecsup.lavacampus.viewmodel.SesionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(vm: SesionViewModel, onIngreso: (Rol) -> Unit) {
+fun LoginScreen(
+    vm: SesionViewModel,
+    onRegistro: () -> Unit,
+    onIngreso: (Rol) -> Unit
+) {
     val modoOscuro by vm.modoOscuro.collectAsState()
     val error by vm.error.collectAsState()
+    val aviso by vm.aviso.collectAsState()
 
     var rolNombre by rememberSaveable { mutableStateOf(Rol.CLIENTE.name) }
     var correo by rememberSaveable { mutableStateOf("") }
@@ -86,7 +93,24 @@ fun LoginScreen(vm: SesionViewModel, onIngreso: (Rol) -> Unit) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(Modifier.height(28.dp))
+
+                aviso?.let {
+                    Spacer(Modifier.height(16.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = it,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
 
                 val opciones = listOf(Rol.CLIENTE to "Estudiante", Rol.ADMIN to "Administrador")
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -97,7 +121,11 @@ fun LoginScreen(vm: SesionViewModel, onIngreso: (Rol) -> Unit) {
                                 rolNombre = r.name
                                 vm.limpiarError()
                             },
-                            shape = SegmentedButtonDefaults.itemShape(indice, opciones.size)
+                            shape = SegmentedButtonDefaults.itemShape(indice, opciones.size),
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         ) {
                             Text(texto)
                         }
@@ -138,6 +166,14 @@ fun LoginScreen(vm: SesionViewModel, onIngreso: (Rol) -> Unit) {
                     texto = "Ingresar",
                     onClick = { vm.login(correo, clave, rol, onIngreso) }
                 )
+
+                // Solo los estudiantes se registran; el administrador es una cuenta fija
+                if (rol == Rol.CLIENTE) {
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = onRegistro) {
+                        Text("¿No tienes cuenta? Regístrate")
+                    }
+                }
             }
         }
     }
