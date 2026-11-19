@@ -348,8 +348,18 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                         TextoSecundario("Estado: pendiente")
                     }
 
-                    CargaUi.Cargando -> {
-                        IndicadorCarga("Cargando información...")
+                    is CargaUi.Cargando -> {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if (estado.mensajeEspera == null) {
+                                IndicadorCarga("Cargando información...")
+                                TextoSecundario("Intento ${estado.intento} de 3")
+                            } else {
+                                IndicadorCarga("Preparando siguiente intento...")
+                                TextoSecundario(estado.mensajeEspera)
+                            }
+                        }
                     }
 
                     is CargaUi.Exito -> {
@@ -392,7 +402,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
 
                             OutlinedButton(
                                 onClick = {
-                                    viewModel.cargarALaVez()
+                                    viewModel.reintentar()
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),

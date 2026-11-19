@@ -1,4 +1,3 @@
-
 package com.andia.centrotareas.model
 
 sealed interface PrimosUi {
@@ -20,7 +19,11 @@ sealed interface PrimosUi {
 
 sealed interface CargaUi {
     data object Inicial : CargaUi
-    data object Cargando : CargaUi
+
+    data class Cargando(
+        val intento: Int = 1,
+        val mensajeEspera: String? = null
+    ) : CargaUi
 
     data class Exito(
         val modo: String,

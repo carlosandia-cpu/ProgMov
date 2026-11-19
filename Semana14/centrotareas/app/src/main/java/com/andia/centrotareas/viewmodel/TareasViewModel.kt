@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 
 class TareasViewModel(
     private val repo: TareasRepository
@@ -170,11 +171,8 @@ class TareasViewModel(
         trabajoPrimos = null
     }
 
-    private val _carga =
-        MutableStateFlow<CargaUi>(CargaUi.Inicial)
-
-    val carga: StateFlow<CargaUi> =
-        _carga.asStateFlow()
+    private val _carga = MutableStateFlow<CargaUi>(CargaUi.Inicial)
+    val carga: StateFlow<CargaUi> = _carga.asStateFlow()
 
     private val _tiempoSecuencial = MutableStateFlow<Long?>(null)
     val tiempoSecuencial: StateFlow<Long?> = _tiempoSecuencial.asStateFlow()
@@ -183,99 +181,122 @@ class TareasViewModel(
     val tiempoParalelo: StateFlow<Long?> = _tiempoParalelo.asStateFlow()
 
     private val _simularError = MutableStateFlow(false)
+    val simularError: StateFlow<Boolean> = _simularError.asStateFlow()
 
-    val simularError: StateFlow<Boolean> =
-        _simularError.asStateFlow()
+    private enum class ModoCarga { SECUENCIAL, PARALELA }
+
+    private class IntentosAgotadosException(error: IOException) :
+        IOException(error.message ?: "Error de conexión", error)
+
+    private var ultimoModo: ModoCarga? = null
 
     fun cambiarSimularError(valor: Boolean) {
         if (_carga.value is CargaUi.Cargando) return
-
         _simularError.value = valor
     }
 
+    private suspend fun <T> ejecutarConReintentos(
+        bloque: suspend () -> T
+    ): T {
+        for (intento in 1..3) {
+            _carga.value = CargaUi.Cargando(intento = intento)
+
+            try {
+                return bloque()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IOException) {
+                if (intento == 3) {
+                    throw IntentosAgotadosException(e)
+                }
+
+                val esperaSegundos = intento.toLong()
+                val unidad = if (esperaSegundos == 1L) "segundo" else "segundos"
+                _carga.value = CargaUi.Cargando(
+                    intento = intento,
+                    mensajeEspera = "Reintentando en $esperaSegundos $unidad..."
+                )
+                delay(esperaSegundos * 1000L)
+            }
+        }
+
+        error("Se agotaron los intentos")
+    }
+
     fun cargarUnaPorUna() {
+        iniciarCarga(ModoCarga.SECUENCIAL)
+    }
+
+    fun cargarALaVez() {
+        iniciarCarga(ModoCarga.PARALELA)
+    }
+
+    private fun iniciarCarga(modo: ModoCarga) {
         if (_carga.value is CargaUi.Cargando) return
 
-        _carga.value = CargaUi.Cargando
+        ultimoModo = modo
+        val simularError = _simularError.value
+        _carga.value = CargaUi.Cargando(intento = 1)
 
         viewModelScope.launch {
             val inicio = SystemClock.elapsedRealtime()
 
             try {
-                val perfil = repo.cargarPerfil()
-                val pedidos = repo.cargarPedidos(
-                    _simularError.value
-                )
+                val (perfil, pedidos) = ejecutarConReintentos {
+                    when (modo) {
+                        ModoCarga.SECUENCIAL -> {
+                            val perfil = repo.cargarPerfil()
+                            val pedidos = repo.cargarPedidos(simularError)
+                            Pair(perfil, pedidos)
+                        }
 
-                val tiempo =
-                    SystemClock.elapsedRealtime() - inicio
+                        ModoCarga.PARALELA -> coroutineScope {
+                            val perfilPendiente = async { repo.cargarPerfil() }
+                            val pedidosPendientes = async {
+                                repo.cargarPedidos(simularError)
+                            }
+                            Pair(
+                                perfilPendiente.await(),
+                                pedidosPendientes.await()
+                            )
+                        }
+                    }
+                }
 
-                _tiempoSecuencial.value = tiempo
+                val tiempo = SystemClock.elapsedRealtime() - inicio
+                val nombreModo = when (modo) {
+                    ModoCarga.SECUENCIAL -> {
+                        _tiempoSecuencial.value = tiempo
+                        "Una por una"
+                    }
+                    ModoCarga.PARALELA -> {
+                        _tiempoParalelo.value = tiempo
+                        "A la vez"
+                    }
+                }
 
                 _carga.value = CargaUi.Exito(
-                    modo = "Una por una",
+                    modo = nombreModo,
                     perfil = perfil,
                     pedidos = pedidos.size,
                     milisegundos = tiempo
                 )
-
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
-
-                _carga.value = CargaUi.Error(
-                    "No se pudo cargar: " +
-                            (e.message ?: "Error desconocido")
-                )
+                val detalle = e.message ?: "Error desconocido"
+                val mensaje = if (e is IntentosAgotadosException) {
+                    "No se pudo completar la carga después de 3 intentos: $detalle"
+                } else {
+                    "No se pudo cargar: $detalle"
+                }
+                _carga.value = CargaUi.Error(mensaje)
             }
         }
     }
 
-    fun cargarALaVez() {
-        if (_carga.value is CargaUi.Cargando) return
-
-        _carga.value = CargaUi.Cargando
-
-        viewModelScope.launch {
-            val inicio = SystemClock.elapsedRealtime()
-
-            try {
-                val (perfil, pedidos) = coroutineScope {
-                    val perfilDeferred = async {
-                        repo.cargarPerfil()
-                    }
-
-                    val pedidosDeferred = async {
-                        repo.cargarPedidos(
-                            _simularError.value
-                        )
-                    }
-
-                    Pair(
-                        perfilDeferred.await(),
-                        pedidosDeferred.await()
-                    )
-                }
-
-                val tiempo =
-                    SystemClock.elapsedRealtime() - inicio
-
-                _tiempoParalelo.value = tiempo
-
-                _carga.value = CargaUi.Exito(
-                    modo = "A la vez",
-                    perfil = perfil,
-                    pedidos = pedidos.size,
-                    milisegundos = tiempo
-                )
-
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-
-                _carga.value = CargaUi.Error(
-                    "No se pudo cargar: " +
-                            (e.message ?: "Error desconocido")
-                )
-            }
-        }
+    fun reintentar() {
+        if (_carga.value !is CargaUi.Error) return
+        ultimoModo?.let { iniciarCarga(it) }
     }
 }
