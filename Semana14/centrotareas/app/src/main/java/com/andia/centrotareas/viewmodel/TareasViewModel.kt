@@ -1,6 +1,7 @@
 
 package com.andia.centrotareas.viewmodel
 
+import android.os.SystemClock
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -92,41 +93,82 @@ class TareasViewModel(
         _primos.asStateFlow()
 
     private var trabajoPrimos: Job? = null
+    private var generacionPrimos = 0L
 
     fun contar(hasta: Int) {
-        if (hasta < 2 || _primos.value is PrimosUi.Calculando) {
+        if (
+            hasta < 2 ||
+            _primos.value is PrimosUi.Calculando
+        ) {
             return
         }
 
-        _primos.value = PrimosUi.Calculando
+        generacionPrimos++
+        val generacionActual = generacionPrimos
+
+        _primos.value = PrimosUi.Calculando(0f)
 
         trabajoPrimos = viewModelScope.launch {
-            val inicio = System.currentTimeMillis()
+            val inicio = SystemClock.elapsedRealtime()
 
             try {
-                val cantidad = repo.contarPrimos(hasta)
-                val tiempo = System.currentTimeMillis() - inicio
+                val cantidad = repo.contarPrimos(hasta) {
+                        nuevoProgreso ->
 
-                _primos.value = PrimosUi.Listo(
-                    cantidad = cantidad,
-                    milisegundos = tiempo
-                )
+                    withContext(Dispatchers.Main.immediate) {
+                        if (
+                            generacionActual == generacionPrimos &&
+                            _primos.value is PrimosUi.Calculando
+                        ) {
+                            _primos.value = PrimosUi.Calculando(
+                                nuevoProgreso
+                            )
+                        }
+                    }
+                }
+
+                val tiempo =
+                    SystemClock.elapsedRealtime() - inicio
+
+                if (generacionActual == generacionPrimos) {
+                    _primos.value = PrimosUi.Listo(
+                        cantidad = cantidad,
+                        milisegundos = tiempo
+                    )
+                }
 
             } catch (e: CancellationException) {
-                _primos.value = PrimosUi.Cancelado
+                if (generacionActual == generacionPrimos) {
+                    val actual =
+                        _primos.value as? PrimosUi.Calculando
+
+                    _primos.value = PrimosUi.Cancelado(
+                        actual?.progreso ?: 0f
+                    )
+                }
+
                 throw e
 
             } finally {
-                trabajoPrimos = null
+                if (generacionActual == generacionPrimos) {
+                    trabajoPrimos = null
+                }
             }
         }
     }
 
     fun cancelarPrimos() {
-        if (_primos.value !is PrimosUi.Calculando) return
+        val actual =
+            _primos.value as? PrimosUi.Calculando ?: return
+
+        generacionPrimos++
+
+        _primos.value = PrimosUi.Cancelado(
+            progreso = actual.progreso
+        )
 
         trabajoPrimos?.cancel()
-        _primos.value = PrimosUi.Cancelado
+        trabajoPrimos = null
     }
 
     private val _carga =
@@ -136,11 +178,13 @@ class TareasViewModel(
         _carga.asStateFlow()
 
     private val _simularError = MutableStateFlow(false)
+
     val simularError: StateFlow<Boolean> =
         _simularError.asStateFlow()
 
     fun cambiarSimularError(valor: Boolean) {
         if (_carga.value is CargaUi.Cargando) return
+
         _simularError.value = valor
     }
 
@@ -150,7 +194,7 @@ class TareasViewModel(
         _carga.value = CargaUi.Cargando
 
         viewModelScope.launch {
-            val inicio = System.currentTimeMillis()
+            val inicio = SystemClock.elapsedRealtime()
 
             try {
                 val perfil = repo.cargarPerfil()
@@ -159,7 +203,7 @@ class TareasViewModel(
                 )
 
                 val tiempo =
-                    System.currentTimeMillis() - inicio
+                    SystemClock.elapsedRealtime() - inicio
 
                 _carga.value = CargaUi.Exito(
                     modo = "Una por una",
@@ -172,7 +216,8 @@ class TareasViewModel(
                 if (e is CancellationException) throw e
 
                 _carga.value = CargaUi.Error(
-                    "No se pudo cargar: ${e.message ?: "Error desconocido"}"
+                    "No se pudo cargar: " +
+                            (e.message ?: "Error desconocido")
                 )
             }
         }
@@ -184,7 +229,7 @@ class TareasViewModel(
         _carga.value = CargaUi.Cargando
 
         viewModelScope.launch {
-            val inicio = System.currentTimeMillis()
+            val inicio = SystemClock.elapsedRealtime()
 
             try {
                 val (perfil, pedidos) = coroutineScope {
@@ -205,7 +250,7 @@ class TareasViewModel(
                 }
 
                 val tiempo =
-                    System.currentTimeMillis() - inicio
+                    SystemClock.elapsedRealtime() - inicio
 
                 _carga.value = CargaUi.Exito(
                     modo = "A la vez",
@@ -218,7 +263,8 @@ class TareasViewModel(
                 if (e is CancellationException) throw e
 
                 _carga.value = CargaUi.Error(
-                    "No se pudo cargar: ${e.message ?: "Error desconocido"}"
+                    "No se pudo cargar: " +
+                            (e.message ?: "Error desconocido")
                 )
             }
         }

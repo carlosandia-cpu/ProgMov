@@ -31,31 +31,59 @@ class TareasRepositoryLocal : TareasRepository {
         )
     }
 
-    override suspend fun contarPrimos(hasta: Int): Int =
-        withContext(Dispatchers.Default) {
-            var cantidad = 0
+    override suspend fun contarPrimos(
+        hasta: Int,
+        onProgress: suspend (Float) -> Unit
+    ): Int = withContext(Dispatchers.Default) {
 
-            for (n in 2..hasta) {
-                currentCoroutineContext().ensureActive()
+        if (hasta < 2) {
+            onProgress(1f)
+            return@withContext 0
+        }
 
-                if (esPrimo(n)) {
-                    cantidad++
-                }
+        val contexto = currentCoroutineContext()
+        val total = hasta - 1
+        val intervalo = maxOf(1, (total / 100) + 1)
+
+        var cantidad = 0
+        var siguienteReporte = intervalo
+
+        for (n in 2..hasta) {
+            contexto.ensureActive()
+
+            if (esPrimo(n)) {
+                cantidad++
             }
 
-            cantidad
+            val procesados = n - 1
+
+            if (
+                procesados >= siguienteReporte ||
+                procesados == total
+            ) {
+                onProgress(
+                    (procesados.toFloat() / total)
+                        .coerceIn(0f, 1f)
+                )
+
+                siguienteReporte += intervalo
+            }
         }
+
+        cantidad
+    }
 
     private fun esPrimo(n: Int): Boolean {
         if (n < 2) return false
 
-        var d = 2
+        var divisor = 2
 
-        while (d.toLong() * d <= n) {
-            if (n % d == 0) {
+        while (divisor.toLong() * divisor <= n) {
+            if (n % divisor == 0) {
                 return false
             }
-            d++
+
+            divisor++
         }
 
         return true
