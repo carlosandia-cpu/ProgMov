@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
     val corriendo by viewModel.corriendo.collectAsState()
     val primos by viewModel.primos.collectAsState()
     val carga by viewModel.carga.collectAsState()
+    val simularError by viewModel.simularError.collectAsState()
 
     val calculando = primos is PrimosUi.Calculando
     val cargando = carga is CargaUi.Cargando
@@ -90,8 +92,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Row(
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
@@ -158,8 +159,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Row(
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
@@ -192,6 +192,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
 
                         PrimosUi.Calculando -> {
                             Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement =
                                     Arrangement.spacedBy(12.dp)
                             ) {
@@ -259,6 +260,26 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Simular error",
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        Switch(
+                            checked = simularError,
+                            onCheckedChange = {
+                                viewModel.cambiarSimularError(it)
+                            },
+                            enabled = !cargando
+                        )
+                    }
+
+                    Row(
                         horizontalArrangement =
                             Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -291,6 +312,8 @@ fun PantallaTareas(viewModel: TareasViewModel) {
 
                         CargaUi.Cargando -> {
                             Row(
+                                verticalAlignment =
+                                    Alignment.CenterVertically,
                                 horizontalArrangement =
                                     Arrangement.spacedBy(12.dp)
                             ) {
@@ -345,10 +368,41 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                         }
 
                         is CargaUi.Error -> {
-                            Text(
-                                "Error: ${estado.mensaje}",
-                                color = MaterialTheme.colorScheme.error
-                            )
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor =
+                                        MaterialTheme.colorScheme.errorContainer
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement =
+                                        Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Text(
+                                        "Error en la carga",
+                                        fontWeight = FontWeight.Bold,
+                                        color =
+                                            MaterialTheme.colorScheme.onErrorContainer
+                                    )
+
+                                    Text(
+                                        estado.mensaje,
+                                        color =
+                                            MaterialTheme.colorScheme.onErrorContainer
+                                    )
+
+                                    OutlinedButton(
+                                        onClick = {
+                                            viewModel.cargarALaVez()
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Reintentar")
+                                    }
+                                }
+                            }
                         }
                     }
                 }
