@@ -13,31 +13,27 @@ class TareasViewModel(
     private val repo: TareasRepository
 ) : ViewModel() {
 
-    // Tarea con progreso (Pasos 1 al 4)
     private val _mensaje = MutableStateFlow("Listo")
     val mensaje: StateFlow<String> = _mensaje.asStateFlow()
 
-    // TODO Paso 1: tareaLargaMala()
-    // TODO Paso 2: tareaLarga()
-    // TODO Paso 3: progreso
-    // TODO Paso 4: Job, corriendo y cancelar()
+    fun tareaLargaMala() {
+        _mensaje.value = "Trabajando..."
 
-    // Contar números primos (Paso 5)
+        // Bloqueo intencional del hilo principal
+        Thread.sleep(4000)
+
+        _mensaje.value = "Terminó"
+    }
+
     private val _primos =
         MutableStateFlow<PrimosUi>(PrimosUi.Inicial)
 
     val primos: StateFlow<PrimosUi> =
         _primos.asStateFlow()
 
-    // TODO Paso 5: contar() y cancelarPrimos()
-
-    // Dos cargas (Pasos 6 y 7)
     private val _carga =
         MutableStateFlow<CargaUi>(CargaUi.Inicial)
 
     val carga: StateFlow<CargaUi> =
         _carga.asStateFlow()
-
-    // TODO Paso 6: cargarUnaPorUna() y cargarALaVez()
-    // TODO Paso 7: simularError y manejo de errores
 }

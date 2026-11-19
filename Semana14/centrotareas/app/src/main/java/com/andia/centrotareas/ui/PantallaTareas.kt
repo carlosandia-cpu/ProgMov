@@ -6,7 +6,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -14,27 +13,19 @@ import com.andia.centrotareas.viewmodel.TareasViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaTareas(
-    viewModel: TareasViewModel
-) {
+fun PantallaTareas(viewModel: TareasViewModel) {
     var toques by remember { mutableIntStateOf(0) }
-
     val mensaje by viewModel.mensaje.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "CentroTareas",
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("CentroTareas", fontWeight = FontWeight.Bold)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor =
-                        MaterialTheme.colorScheme.primary,
-                    titleContentColor =
-                        MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -48,7 +39,6 @@ fun PantallaTareas(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             Text(
                 "Centro de operaciones",
                 style = MaterialTheme.typography.headlineSmall,
@@ -56,7 +46,7 @@ fun PantallaTareas(
             )
 
             Text(
-                "Ejecuta tareas y observa sus estados.",
+                "Laboratorio de hilos y tareas en Android",
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
@@ -67,10 +57,7 @@ fun PantallaTareas(
                 Text("Tócame: $toques")
             }
 
-            // Tarjeta 1: tarea con progreso
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -78,51 +65,46 @@ fun PantallaTareas(
                     TituloTarjeta("Tarea con progreso")
 
                     Text(
-                        "Estado: $mensaje",
-                        style = MaterialTheme.typography.bodyMedium
+                        "Demostración del bloqueo del hilo principal",
+                        style = MaterialTheme.typography.bodySmall
                     )
 
-                    Row(
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
+                    Button(
+                        onClick = { viewModel.tareaLargaMala() },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Button(
-                            onClick = {},
-                            enabled = false
-                        ) {
-                            Text("Iniciar")
-                        }
-
-                        OutlinedButton(
-                            onClick = {},
-                            enabled = false
-                        ) {
-                            Text("Cancelar")
-                        }
+                        Text("Tarea larga (MAL)")
                     }
 
-                    LinearProgressIndicator(
-                        progress = { 0f },
-                        modifier = Modifier.fillMaxWidth()
+                    Text(
+                        "Estado: $mensaje",
+                        fontWeight = FontWeight.Medium
                     )
 
-                    Text("0 %")
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            "Esta tarea bloquea la interfaz durante 4 segundos. " +
+                                    "Intenta tocar el contador mientras se ejecuta.",
+                            modifier = Modifier.padding(12.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
 
-            // Tarjeta 2: contar números primos
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     TituloTarjeta("Contar números primos")
 
-                    Text(
-                        "Cálculo pesado en segundo plano"
-                    )
+                    Text("Cálculo pesado en segundo plano")
 
                     OutlinedTextField(
                         value = "500000",
@@ -133,20 +115,13 @@ fun PantallaTareas(
                     )
 
                     Row(
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Button(
-                            onClick = {},
-                            enabled = false
-                        ) {
+                        Button(onClick = {}, enabled = false) {
                             Text("Contar")
                         }
 
-                        OutlinedButton(
-                            onClick = {},
-                            enabled = false
-                        ) {
+                        OutlinedButton(onClick = {}, enabled = false) {
                             Text("Cancelar")
                         }
                     }
@@ -155,35 +130,23 @@ fun PantallaTareas(
                 }
             }
 
-            // Tarjeta 3: dos cargas
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     TituloTarjeta("Dos cargas")
 
-                    Text(
-                        "Comparar ejecución secuencial y paralela"
-                    )
+                    Text("Comparar ejecución secuencial y paralela")
 
                     Row(
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = {},
-                            enabled = false
-                        ) {
+                        OutlinedButton(onClick = {}, enabled = false) {
                             Text("Una por una")
                         }
 
-                        Button(
-                            onClick = {},
-                            enabled = false
-                        ) {
+                        Button(onClick = {}, enabled = false) {
                             Text("A la vez")
                         }
                     }
