@@ -1,22 +1,22 @@
 
 package com.andia.campusgps.ui
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.andia.campusgps.model.Lugar
 import com.andia.campusgps.model.LugarConDistancia
 import com.andia.campusgps.model.UbicacionUi
+import com.andia.campusgps.ui.theme.AzulNoche
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.google.maps.android.compose.*
 
 @Composable
 fun MapaUbicacion(
@@ -24,108 +24,125 @@ fun MapaUbicacion(
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
     masCercano: Lugar?,
+    onSeleccionar: (Int) -> Unit,
+    onUbicacion: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             LatLng(-12.0464, -77.0428),
-            12f
+            15f
         )
     }
 
-    // Mover la cámara a la ubicación actual
     LaunchedEffect(estado) {
         if (estado is UbicacionUi.Lista) {
-            val posicion = LatLng(
-                estado.posicion.latitud,
-                estado.posicion.longitud
-            )
-
             camara.animate(
                 CameraUpdateFactory.newLatLngZoom(
-                    posicion,
+                    LatLng(
+                        estado.posicion.latitud,
+                        estado.posicion.longitud
+                    ),
                     16f
                 )
             )
         }
     }
 
-    // Mover la cámara al lugar seleccionado
     LaunchedEffect(seleccionado) {
-
         val lugar = lugares.firstOrNull {
             it.lugar.id == seleccionado
         }?.lugar ?: return@LaunchedEffect
 
         camara.animate(
             CameraUpdateFactory.newLatLngZoom(
-                LatLng(
-                    lugar.latitud,
-                    lugar.longitud
-                ),
+                LatLng(lugar.latitud, lugar.longitud),
                 17f
             )
         )
     }
 
-    GoogleMap(
-        modifier = modifier,
-        cameraPositionState = camara,
-        uiSettings = MapUiSettings(
-            zoomControlsEnabled = false
-        )
-    ) {
+    Box(modifier = modifier) {
 
-        // Marcador rojo: ubicación del usuario
-        if (estado is UbicacionUi.Lista) {
-            Marker(
-                state = rememberUpdatedMarkerState(
-                    position = LatLng(
-                        estado.posicion.latitud,
-                        estado.posicion.longitud
-                    )
-                ),
-                title = "Estás aquí"
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = camara,
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                compassEnabled = true,
+                mapToolbarEnabled = false
             )
-        }
+        ) {
 
-        // Marcadores de los lugares del campus
-        lugares.forEach { item ->
-
-            val lugar = item.lugar
-
-            key(lugar.id) {
-
-                val markerState = rememberUpdatedMarkerState(
-                    position = LatLng(
-                        lugar.latitud,
-                        lugar.longitud
+            if (estado is UbicacionUi.Lista) {
+                Marker(
+                    state = rememberUpdatedMarkerState(
+                        position = LatLng(
+                            estado.posicion.latitud,
+                            estado.posicion.longitud
+                        )
+                    ),
+                    title = "Estás aquí",
+                    icon = BitmapDescriptorFactory.defaultMarker(
+                        BitmapDescriptorFactory.HUE_RED
                     )
                 )
+            }
 
-                // Mostrar el nombre del lugar seleccionado
-                LaunchedEffect(seleccionado) {
-                    if (seleccionado == lugar.id) {
-                        markerState.showInfoWindow()
-                    }
-                }
+            lugares.forEach { item ->
 
-                // Commit 8: verde para el más cercano
-                val colorMarcador =
-                    if (lugar.id == masCercano?.id) {
-                        BitmapDescriptorFactory.HUE_GREEN
-                    } else {
-                        BitmapDescriptorFactory.HUE_AZURE
-                    }
+                val lugar = item.lugar
 
-                Marker(
-                    state = markerState,
-                    title = lugar.nombre,
-                    snippet = lugar.categoria,
-                    icon = BitmapDescriptorFactory.defaultMarker(
-                        colorMarcador
+                key(lugar.id) {
+                    val markerState = rememberUpdatedMarkerState(
+                        position = LatLng(
+                            lugar.latitud,
+                            lugar.longitud
+                        )
                     )
+
+                    LaunchedEffect(seleccionado) {
+                        if (seleccionado == lugar.id) {
+                            markerState.showInfoWindow()
+                        }
+                    }
+
+                    Marker(
+                        state = markerState,
+                        title = lugar.nombre,
+                        snippet = lugar.categoria,
+                        icon = BitmapDescriptorFactory.defaultMarker(
+                            if (lugar.id == masCercano?.id)
+                                BitmapDescriptorFactory.HUE_GREEN
+                            else
+                                BitmapDescriptorFactory.HUE_AZURE
+                        ),
+                        onClick = {
+                            onSeleccionar(lugar.id)
+                            false
+                        }
+                    )
+                }
+            }
+        }
+
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 18.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp
+        ) {
+            IconButton(
+                onClick = onUbicacion,
+                enabled = estado !is UbicacionUi.Buscando,
+                modifier = Modifier.size(52.dp)
+            ) {
+                Text(
+                    text = "◎",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = AzulNoche
                 )
             }
         }
