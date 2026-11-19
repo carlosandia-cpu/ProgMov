@@ -21,7 +21,10 @@ fun PantallaTareas(viewModel: TareasViewModel) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text("CentroTareas", fontWeight = FontWeight.Bold)
+                    Text(
+                        "CentroTareas",
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -39,6 +42,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             Text(
                 "Centro de operaciones",
                 style = MaterialTheme.typography.headlineSmall,
@@ -65,15 +69,15 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     TituloTarjeta("Tarea con progreso")
 
                     Text(
-                        "Demostración del bloqueo del hilo principal",
+                        "Demostración de corrutinas sin bloqueo",
                         style = MaterialTheme.typography.bodySmall
                     )
 
                     Button(
-                        onClick = { viewModel.tareaLargaMala() },
+                        onClick = { viewModel.tareaLarga() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Tarea larga (MAL)")
+                        Text("Tarea larga")
                     }
 
                     Text(
@@ -83,14 +87,16 @@ fun PantallaTareas(viewModel: TareasViewModel) {
 
                     Card(
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        )
+                            containerColor =
+                                MaterialTheme.colorScheme.primaryContainer
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            "Esta tarea bloquea la interfaz durante 4 segundos. " +
-                                    "Intenta tocar el contador mientras se ejecuta.",
+                            "La tarea dura 4 segundos sin congelar " +
+                                    "la interfaz. El contador sigue respondiendo.",
                             modifier = Modifier.padding(12.dp),
-                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -104,7 +110,10 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                 ) {
                     TituloTarjeta("Contar números primos")
 
-                    Text("Cálculo pesado en segundo plano")
+                    Text(
+                        "Cálculo pesado en segundo plano",
+                        style = MaterialTheme.typography.bodySmall
+                    )
 
                     OutlinedTextField(
                         value = "500000",
@@ -115,18 +124,28 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(8.dp)
                     ) {
-                        Button(onClick = {}, enabled = false) {
+                        Button(
+                            onClick = {},
+                            enabled = false
+                        ) {
                             Text("Contar")
                         }
 
-                        OutlinedButton(onClick = {}, enabled = false) {
+                        OutlinedButton(
+                            onClick = {},
+                            enabled = false
+                        ) {
                             Text("Cancelar")
                         }
                     }
 
-                    Text("Estado: pendiente")
+                    Text(
+                        "Estado: pendiente",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
 
@@ -137,21 +156,34 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                 ) {
                     TituloTarjeta("Dos cargas")
 
-                    Text("Comparar ejecución secuencial y paralela")
+                    Text(
+                        "Comparar ejecución secuencial y paralela",
+                        style = MaterialTheme.typography.bodySmall
+                    )
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(onClick = {}, enabled = false) {
+                        OutlinedButton(
+                            onClick = {},
+                            enabled = false
+                        ) {
                             Text("Una por una")
                         }
 
-                        Button(onClick = {}, enabled = false) {
+                        Button(
+                            onClick = {},
+                            enabled = false
+                        ) {
                             Text("A la vez")
                         }
                     }
 
-                    Text("Estado: pendiente")
+                    Text(
+                        "Estado: pendiente",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }
