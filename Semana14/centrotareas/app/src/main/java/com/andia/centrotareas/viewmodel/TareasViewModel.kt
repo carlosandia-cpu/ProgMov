@@ -7,7 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.andia.centrotareas.data.TareasRepository
 import com.andia.centrotareas.model.CargaUi
 import com.andia.centrotareas.model.PrimosUi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,26 +27,60 @@ class TareasViewModel(
     private val _progreso = MutableStateFlow(0f)
     val progreso: StateFlow<Float> = _progreso.asStateFlow()
 
+    private val _corriendo = MutableStateFlow(false)
+    val corriendo: StateFlow<Boolean> = _corriendo.asStateFlow()
+
+    private var trabajo: Job? = null
+
     fun tareaLarga() {
-        viewModelScope.launch {
-            _mensaje.value = "Trabajando..."
-            _progreso.value = 0f
+        if (_corriendo.value) return
 
-            Log.d("HILO", "Antes: ${Thread.currentThread().name}")
+        _corriendo.value = true
+        _progreso.value = 0f
+        _mensaje.value = "Trabajando..."
 
-            withContext(Dispatchers.Default) {
-                Log.d("HILO", "Dentro: ${Thread.currentThread().name}")
+        trabajo = viewModelScope.launch {
+            try {
+                Log.d(
+                    "HILO",
+                    "Antes: ${Thread.currentThread().name}"
+                )
 
-                for (i in 1..100) {
-                    delay(40)
-                    _progreso.value = i / 100f
+                withContext(Dispatchers.Default) {
+                    Log.d(
+                        "HILO",
+                        "Dentro: ${Thread.currentThread().name}"
+                    )
+
+                    for (i in 1..100) {
+                        delay(40)
+                        _progreso.value = i / 100f
+                    }
                 }
+
+                Log.d(
+                    "HILO",
+                    "Despues: ${Thread.currentThread().name}"
+                )
+
+                _mensaje.value = "Terminó"
+
+            } catch (e: CancellationException) {
+                _mensaje.value = "Cancelado"
+                throw e
+
+            } finally {
+                _corriendo.value = false
+                trabajo = null
             }
-
-            Log.d("HILO", "Despues: ${Thread.currentThread().name}")
-
-            _mensaje.value = "Terminó"
         }
+    }
+
+    fun cancelar() {
+        if (!_corriendo.value) return
+
+        _mensaje.value = "Cancelado"
+        trabajo?.cancel()
     }
 
     private val _primos =

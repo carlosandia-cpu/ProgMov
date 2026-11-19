@@ -18,6 +18,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
 
     val mensaje by viewModel.mensaje.collectAsState()
     val progreso by viewModel.progreso.collectAsState()
+    val corriendo by viewModel.corriendo.collectAsState()
 
     Scaffold(
         topBar = {
@@ -76,11 +77,26 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                         style = MaterialTheme.typography.bodySmall
                     )
 
-                    Button(
-                        onClick = { viewModel.tareaLarga() },
+                    Row(
+                        horizontalArrangement =
+                            Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Iniciar")
+                        Button(
+                            onClick = { viewModel.tareaLarga() },
+                            enabled = !corriendo,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Iniciar")
+                        }
+
+                        OutlinedButton(
+                            onClick = { viewModel.cancelar() },
+                            enabled = corriendo,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Cancelar")
+                        }
                     }
 
                     Text(
@@ -124,7 +140,8 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
                             onClick = {},
@@ -159,7 +176,8 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement =
+                            Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
                             onClick = {},
