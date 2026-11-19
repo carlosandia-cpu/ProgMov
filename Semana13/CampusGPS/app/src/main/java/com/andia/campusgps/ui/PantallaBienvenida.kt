@@ -122,7 +122,7 @@ fun PantallaBienvenida(onComenzar: () -> Unit) {
                     .height(56.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AzulBrillante,
+                    containerColor = AzulPrincipal,
                     contentColor = Blanco
                 ),
                 border = BorderStroke(1.5.dp, Blanco.copy(alpha = 0.7f)),

@@ -10,6 +10,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
 class UbicacionRepositoryGoogle(
@@ -31,8 +32,11 @@ class UbicacionRepositoryGoogle(
         ) as LocationManager
 
         return try {
-            manager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-                    manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+            manager.isProviderEnabled(
+                LocationManager.GPS_PROVIDER
+            ) || manager.isProviderEnabled(
+                LocationManager.NETWORK_PROVIDER
+            )
         } catch (e: Exception) {
             false
         }
@@ -72,6 +76,8 @@ class UbicacionRepositoryGoogle(
                 )
             }
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

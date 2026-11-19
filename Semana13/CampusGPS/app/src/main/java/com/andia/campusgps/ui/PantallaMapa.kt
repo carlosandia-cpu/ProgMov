@@ -29,7 +29,7 @@ import com.andia.campusgps.util.formatearDistancia
 import com.andia.campusgps.viewmodel.MapaViewModel
 
 @Composable
-private fun PantallaBienvenida(
+private fun PantallaBienvenida1(
     onComenzar: () -> Unit
 ) {
     Box(

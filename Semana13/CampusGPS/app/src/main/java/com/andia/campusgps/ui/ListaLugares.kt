@@ -46,7 +46,9 @@ fun LugarImagen(
             "drawable",
             contexto.packageName
         )
-    } else 0
+    } else {
+        0
+    }
 
     val simbolo = when (lugar.categoria) {
         "Estudio" -> "📚"
@@ -101,7 +103,9 @@ fun ListaLugares(
             val activo = seleccionado == item.lugar.id
 
             Card(
-                onClick = { onClick(item.lugar.id) },
+                onClick = {
+                    onClick(item.lugar.id)
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
@@ -126,7 +130,6 @@ fun ListaLugares(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
                     LugarImagen(
                         lugar = item.lugar,
                         modifier = Modifier.size(70.dp)
@@ -159,12 +162,12 @@ fun ListaLugares(
                         Text(
                             text = item.metros?.let {
                                 formatearDistancia(it)
-                            } ?: "—",
+                            } ?: "Sin calcular",
                             modifier = Modifier.padding(
                                 horizontal = 9.dp,
                                 vertical = 7.dp
                             ),
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = VerdeCampus
                         )

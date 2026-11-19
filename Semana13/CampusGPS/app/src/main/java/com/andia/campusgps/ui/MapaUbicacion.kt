@@ -31,7 +31,7 @@ fun MapaUbicacion(
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             LatLng(-12.0464, -77.0428),
-            15f
+            12f
         )
     }
 
@@ -63,7 +63,6 @@ fun MapaUbicacion(
     }
 
     Box(modifier = modifier) {
-
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = camara,
@@ -73,7 +72,6 @@ fun MapaUbicacion(
                 mapToolbarEnabled = false
             )
         ) {
-
             if (estado is UbicacionUi.Lista) {
                 Marker(
                     state = rememberUpdatedMarkerState(
@@ -90,7 +88,6 @@ fun MapaUbicacion(
             }
 
             lugares.forEach { item ->
-
                 val lugar = item.lugar
 
                 key(lugar.id) {
@@ -112,10 +109,11 @@ fun MapaUbicacion(
                         title = lugar.nombre,
                         snippet = lugar.categoria,
                         icon = BitmapDescriptorFactory.defaultMarker(
-                            if (lugar.id == masCercano?.id)
+                            if (lugar.id == masCercano?.id) {
                                 BitmapDescriptorFactory.HUE_GREEN
-                            else
+                            } else {
                                 BitmapDescriptorFactory.HUE_AZURE
+                            }
                         ),
                         onClick = {
                             onSeleccionar(lugar.id)
