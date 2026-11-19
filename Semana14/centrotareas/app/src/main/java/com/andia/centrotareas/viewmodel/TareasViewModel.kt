@@ -1,4 +1,3 @@
-
 package com.andia.centrotareas.viewmodel
 
 import android.os.SystemClock
@@ -177,6 +176,12 @@ class TareasViewModel(
     val carga: StateFlow<CargaUi> =
         _carga.asStateFlow()
 
+    private val _tiempoSecuencial = MutableStateFlow<Long?>(null)
+    val tiempoSecuencial: StateFlow<Long?> = _tiempoSecuencial.asStateFlow()
+
+    private val _tiempoParalelo = MutableStateFlow<Long?>(null)
+    val tiempoParalelo: StateFlow<Long?> = _tiempoParalelo.asStateFlow()
+
     private val _simularError = MutableStateFlow(false)
 
     val simularError: StateFlow<Boolean> =
@@ -204,6 +209,8 @@ class TareasViewModel(
 
                 val tiempo =
                     SystemClock.elapsedRealtime() - inicio
+
+                _tiempoSecuencial.value = tiempo
 
                 _carga.value = CargaUi.Exito(
                     modo = "Una por una",
@@ -251,6 +258,8 @@ class TareasViewModel(
 
                 val tiempo =
                     SystemClock.elapsedRealtime() - inicio
+
+                _tiempoParalelo.value = tiempo
 
                 _carga.value = CargaUi.Exito(
                     modo = "A la vez",

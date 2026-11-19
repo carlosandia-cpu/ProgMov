@@ -1,4 +1,3 @@
-
 package com.andia.centrotareas.ui
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -41,6 +40,8 @@ fun PantallaTareas(viewModel: TareasViewModel) {
     val primos by viewModel.primos.collectAsState()
     val carga by viewModel.carga.collectAsState()
     val simularError by viewModel.simularError.collectAsState()
+    val tiempoSecuencial by viewModel.tiempoSecuencial.collectAsState()
+    val tiempoParalelo by viewModel.tiempoParalelo.collectAsState()
 
     val calculando = primos is PrimosUi.Calculando
     val cargando = carga is CargaUi.Cargando
@@ -405,6 +406,16 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                         }
                     }
                 }
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outline
+                        .copy(alpha = 0.22f)
+                )
+
+                SeccionComparacionRendimiento(
+                    tiempoSecuencial = tiempoSecuencial,
+                    tiempoParalelo = tiempoParalelo
+                )
             }
 
             Text(
@@ -414,6 +425,128 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                 style = MaterialTheme.typography.labelSmall
             )
         }
+    }
+}
+
+@Composable
+private fun SeccionComparacionRendimiento(
+    tiempoSecuencial: Long?,
+    tiempoParalelo: Long?
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text(
+            text = "Comparación de rendimiento",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+
+        val secuencial = tiempoSecuencial?.takeIf { it > 0L }
+        val paralelo = tiempoParalelo?.takeIf { it > 0L }
+        val referencia = maxOf(secuencial ?: 0L, paralelo ?: 0L, 1L).toDouble()
+
+        BarraTiempo(
+            titulo = "Secuencial",
+            tiempo = secuencial,
+            proporcion = ((secuencial ?: 0L).toDouble() / referencia).toFloat(),
+            color = AzulPrincipal
+        )
+
+        BarraTiempo(
+            titulo = "Paralela",
+            tiempo = paralelo,
+            proporcion = ((paralelo ?: 0L).toDouble() / referencia).toFloat(),
+            color = Turquesa
+        )
+
+        if (secuencial != null && paralelo != null) {
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+            )
+
+            val diferencia = secuencial - paralelo
+            val porcentaje = kotlin.math.abs(diferencia.toDouble()) *
+                    100.0 / secuencial.toDouble()
+            val porcentajeTexto = String.format(
+                java.util.Locale.getDefault(), "%.1f", porcentaje
+            )
+
+            val resultado = when {
+                diferencia > 0L ->
+                    "La carga paralela ahorró $diferencia ms ($porcentajeTexto % menos tiempo)."
+
+                diferencia < 0L ->
+                    "La carga paralela tardó ${-diferencia} ms más ($porcentajeTexto % más tiempo)."
+
+                else -> "Ambos modos tardaron lo mismo."
+            }
+
+            Text(
+                text = resultado,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (diferencia > 0L) {
+                    TextoExito
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+        } else {
+            val mensaje = when {
+                secuencial == null && paralelo == null ->
+                    "Ejecuta ambos modos para comparar sus tiempos."
+                secuencial == null ->
+                    "Falta ejecutar Una por una para comparar."
+                else ->
+                    "Falta ejecutar A la vez para comparar."
+            }
+            TextoSecundario(mensaje)
+        }
+    }
+}
+
+@Composable
+private fun BarraTiempo(
+    titulo: String,
+    tiempo: Long?,
+    proporcion: Float,
+    color: Color
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = titulo,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = tiempo?.let { "$it ms" } ?: "Sin medir",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (tiempo == null) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else color
+            )
+        }
+        LinearProgressIndicator(
+            progress = { proporcion.coerceIn(0f, 1f) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(RoundedCornerShape(10.dp)),
+            color = color,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     }
 }
 
