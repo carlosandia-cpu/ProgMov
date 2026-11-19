@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.andia.centrotareas.model.CargaUi
 import com.andia.centrotareas.model.PrimosUi
 import com.andia.centrotareas.viewmodel.TareasViewModel
 
@@ -26,8 +27,10 @@ fun PantallaTareas(viewModel: TareasViewModel) {
     val progreso by viewModel.progreso.collectAsState()
     val corriendo by viewModel.corriendo.collectAsState()
     val primos by viewModel.primos.collectAsState()
+    val carga by viewModel.carga.collectAsState()
 
     val calculando = primos is PrimosUi.Calculando
+    val cargando = carga is CargaUi.Cargando
     val numeroValido = numero.toIntOrNull()?.let { it >= 2 } == true
 
     Scaffold(
@@ -257,24 +260,97 @@ fun PantallaTareas(viewModel: TareasViewModel) {
 
                     Row(
                         horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
+                            Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         OutlinedButton(
-                            onClick = {},
-                            enabled = false
+                            onClick = {
+                                viewModel.cargarUnaPorUna()
+                            },
+                            enabled = !cargando,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Una por una")
                         }
 
                         Button(
-                            onClick = {},
-                            enabled = false
+                            onClick = {
+                                viewModel.cargarALaVez()
+                            },
+                            enabled = !cargando,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("A la vez")
                         }
                     }
 
-                    Text("Estado: pendiente")
+                    when (val estado = carga) {
+                        CargaUi.Inicial -> {
+                            Text("Estado: pendiente")
+                        }
+
+                        CargaUi.Cargando -> {
+                            Row(
+                                horizontalArrangement =
+                                    Arrangement.spacedBy(12.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp
+                                )
+
+                                Text("Cargando datos...")
+                            }
+                        }
+
+                        is CargaUi.Exito -> {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFE3F3E8)
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement =
+                                        Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        "Carga completada",
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF17643C)
+                                    )
+
+                                    Text(
+                                        "Modo: ${estado.modo}",
+                                        color = Color(0xFF17643C)
+                                    )
+
+                                    Text(
+                                        "Perfil: ${estado.perfil}",
+                                        color = Color(0xFF17643C)
+                                    )
+
+                                    Text(
+                                        "Pedidos: ${estado.pedidos}",
+                                        color = Color(0xFF17643C)
+                                    )
+
+                                    Text(
+                                        "Tiempo: ${estado.milisegundos} ms",
+                                        color = Color(0xFF17643C)
+                                    )
+                                }
+                            }
+                        }
+
+                        is CargaUi.Error -> {
+                            Text(
+                                "Error: ${estado.mensaje}",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 }
             }
         }

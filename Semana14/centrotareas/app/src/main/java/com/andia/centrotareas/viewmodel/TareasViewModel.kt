@@ -10,6 +10,8 @@ import com.andia.centrotareas.model.PrimosUi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -132,4 +134,60 @@ class TareasViewModel(
 
     val carga: StateFlow<CargaUi> =
         _carga.asStateFlow()
+
+    fun cargarUnaPorUna() {
+        if (_carga.value is CargaUi.Cargando) return
+
+        _carga.value = CargaUi.Cargando
+
+        viewModelScope.launch {
+            val inicio = System.currentTimeMillis()
+
+            val perfil = repo.cargarPerfil()
+            val pedidos = repo.cargarPedidos(false)
+
+            val tiempo = System.currentTimeMillis() - inicio
+
+            _carga.value = CargaUi.Exito(
+                modo = "Una por una",
+                perfil = perfil,
+                pedidos = pedidos.size,
+                milisegundos = tiempo
+            )
+        }
+    }
+
+    fun cargarALaVez() {
+        if (_carga.value is CargaUi.Cargando) return
+
+        _carga.value = CargaUi.Cargando
+
+        viewModelScope.launch {
+            val inicio = System.currentTimeMillis()
+
+            val (perfil, pedidos) = coroutineScope {
+                val perfilDeferred = async {
+                    repo.cargarPerfil()
+                }
+
+                val pedidosDeferred = async {
+                    repo.cargarPedidos(false)
+                }
+
+                Pair(
+                    perfilDeferred.await(),
+                    pedidosDeferred.await()
+                )
+            }
+
+            val tiempo = System.currentTimeMillis() - inicio
+
+            _carga.value = CargaUi.Exito(
+                modo = "A la vez",
+                perfil = perfil,
+                pedidos = pedidos.size,
+                milisegundos = tiempo
+            )
+        }
+    }
 }
