@@ -1,4 +1,3 @@
-
 package com.andia.campusgps.ui
 
 import android.Manifest
@@ -10,6 +9,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -123,6 +124,7 @@ fun PantallaMapa(vm: MapaViewModel) {
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()
+    val categoriaSeleccionada by vm.categoriaSeleccionada.collectAsState()
 
     val contexto = LocalContext.current
 
@@ -323,7 +325,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                             }
                         ) {
                             Text(
-                                "Ver los 5",
+                                "Ver lugares",
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -503,7 +505,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                 )
 
                 Text(
-                    text = "5 destinos disponibles · Ordenados por distancia",
+                    text = "${lugares.size} destinos disponibles · Ordenados por distancia",
                     fontSize = 12.sp,
                     color = TextoSecundario,
                     modifier = Modifier.padding(
@@ -511,6 +513,42 @@ fun PantallaMapa(vm: MapaViewModel) {
                         vertical = 6.dp
                     )
                 )
+
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(vm.categorias) { cat ->
+                        val seleccionada = cat == categoriaSeleccionada
+                        FilterChip(
+                            selected = seleccionada,
+                            onClick = {
+                                vm.seleccionarCategoria(cat)
+                            },
+                            label = {
+                                Text(
+                                    text = cat,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (seleccionada) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = AzulClaro,
+                                labelColor = TextoPrincipal,
+                                selectedContainerColor = AzulPrincipal,
+                                selectedLabelColor = Blanco
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 1.dp,
+                                color = if (seleccionada) AzulPrincipal else BordeSuave
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
+                }
 
                 ListaLugares(
                     lugares = lugares,

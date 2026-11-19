@@ -1,4 +1,3 @@
-
 package com.andia.campusgps.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -12,13 +11,13 @@ import com.andia.campusgps.model.TipoError
 import com.andia.campusgps.model.UbicacionUi
 import com.andia.campusgps.util.distanciaMetros
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.andia.campusgps.ui.theme.CampusTheme
 
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
@@ -31,14 +30,29 @@ class MapaViewModel(
     val estado: StateFlow<UbicacionUi> =
         _estado.asStateFlow()
 
-    private val _lugares = MutableStateFlow(
+    private val _todosLosLugares = MutableStateFlow(
         lugaresRepo.obtenerLugares().map {
             LugarConDistancia(it, null)
         }
     )
 
+    private val _categoriaSeleccionada = MutableStateFlow("Todas")
+    val categoriaSeleccionada: StateFlow<String> = _categoriaSeleccionada.asStateFlow()
+
+    val categorias: List<String> = listOf("Todas", "Estudio", "Comida", "Eventos", "Servicios")
+
     val lugares: StateFlow<List<LugarConDistancia>> =
-        _lugares.asStateFlow()
+        combine(_todosLosLugares, _categoriaSeleccionada) { lista, categoria ->
+            if (categoria == "Todas") {
+                lista
+            } else {
+                lista.filter { it.lugar.categoria.equals(categoria, ignoreCase = true) }
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = _todosLosLugares.value
+        )
 
     private val _seleccionado =
         MutableStateFlow<Int?>(null)
@@ -58,7 +72,6 @@ class MapaViewModel(
         )
 
     fun buscar() {
-
         _estado.value = UbicacionUi.Buscando
 
         if (!ubicacionRepo.playServicesDisponible()) {
@@ -92,8 +105,23 @@ class MapaViewModel(
         _seleccionado.value = id
     }
 
+    fun seleccionarCategoria(categoria: String) {
+        _categoriaSeleccionada.value = categoria
+        val idSeleccionado = _seleccionado.value
+        if (idSeleccionado != null) {
+            val listaFiltrada = if (categoria == "Todas") {
+                _todosLosLugares.value
+            } else {
+                _todosLosLugares.value.filter { it.lugar.categoria.equals(categoria, ignoreCase = true) }
+            }
+            if (listaFiltrada.none { it.lugar.id == idSeleccionado }) {
+                _seleccionado.value = null
+            }
+        }
+    }
+
     private fun actualizarDistancias(pos: Posicion) {
-        _lugares.value = lugaresRepo.obtenerLugares()
+        _todosLosLugares.value = lugaresRepo.obtenerLugares()
             .map { lugar ->
                 LugarConDistancia(
                     lugar = lugar,
@@ -105,7 +133,6 @@ class MapaViewModel(
 
     private fun manejarError(error: Throwable) {
         when (error) {
-
             is SecurityException -> {
                 mostrarError(
                     "Sin permiso de ubicación no puedo mostrar dónde estás",

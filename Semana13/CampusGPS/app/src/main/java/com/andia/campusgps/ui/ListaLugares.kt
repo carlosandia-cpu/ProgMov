@@ -1,4 +1,3 @@
-
 package com.andia.campusgps.ui
 
 import androidx.compose.foundation.Image
@@ -16,6 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -87,90 +87,122 @@ fun ListaLugares(
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(
-            horizontal = 16.dp,
-            vertical = 10.dp
-        )
-    ) {
-        items(
-            items = lugares,
-            key = { it.lugar.id }
-        ) { item ->
-
-            val activo = seleccionado == item.lugar.id
-
-            Card(
-                onClick = {
-                    onClick(item.lugar.id)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (activo) {
-                        AzulClaro
-                    } else {
-                        Blanco
-                    }
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    if (activo) 2.dp else 1.dp,
-                    if (activo) AzulPrincipal else BordeSuave
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = if (activo) 3.dp else 1.dp
-                )
+    if (lugares.isEmpty()) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    LugarImagen(
-                        lugar = item.lugar,
-                        modifier = Modifier.size(70.dp)
+                Text(
+                    text = "🔍",
+                    fontSize = 36.sp
+                )
+                Text(
+                    text = "No hay lugares en esta categoría",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoPrincipal,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "Intenta seleccionando otra opción.",
+                    fontSize = 13.sp,
+                    color = TextoSecundario,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(
+                horizontal = 16.dp,
+                vertical = 10.dp
+            )
+        ) {
+            items(
+                items = lugares,
+                key = { it.lugar.id }
+            ) { item ->
+
+                val activo = seleccionado == item.lugar.id
+
+                Card(
+                    onClick = {
+                        onClick(item.lugar.id)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (activo) {
+                            AzulClaro
+                        } else {
+                            Blanco
+                        }
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        if (activo) 2.dp else 1.dp,
+                        if (activo) AzulPrincipal else BordeSuave
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = if (activo) 3.dp else 1.dp
                     )
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            text = item.lugar.nombre,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = TextoPrincipal,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                        LugarImagen(
+                            lugar = item.lugar,
+                            modifier = Modifier.size(70.dp)
                         )
 
-                        Text(
-                            text = item.lugar.categoria,
-                            fontSize = 11.sp,
-                            color = TextoSecundario
-                        )
-                    }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = item.lugar.nombre,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = TextoPrincipal,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = VerdeClaro
-                    ) {
-                        Text(
-                            text = item.metros?.let {
-                                formatearDistancia(it)
-                            } ?: "Sin calcular",
-                            modifier = Modifier.padding(
-                                horizontal = 9.dp,
-                                vertical = 7.dp
-                            ),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = VerdeCampus
-                        )
+                            Text(
+                                text = item.lugar.categoria,
+                                fontSize = 11.sp,
+                                color = TextoSecundario
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = VerdeClaro
+                        ) {
+                            Text(
+                                text = item.metros?.let {
+                                    formatearDistancia(it)
+                                } ?: "Sin calcular",
+                                modifier = Modifier.padding(
+                                    horizontal = 9.dp,
+                                    vertical = 7.dp
+                                ),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = VerdeCampus
+                            )
+                        }
                     }
                 }
             }
