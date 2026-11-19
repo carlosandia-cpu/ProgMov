@@ -15,7 +15,9 @@ import com.andia.centrotareas.viewmodel.TareasViewModel
 @Composable
 fun PantallaTareas(viewModel: TareasViewModel) {
     var toques by remember { mutableIntStateOf(0) }
+
     val mensaje by viewModel.mensaje.collectAsState()
+    val progreso by viewModel.progreso.collectAsState()
 
     Scaffold(
         topBar = {
@@ -66,10 +68,11 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+
                     TituloTarjeta("Tarea con progreso")
 
                     Text(
-                        "Demostración de corrutinas sin bloqueo",
+                        "Ejecución en segundo plano",
                         style = MaterialTheme.typography.bodySmall
                     )
 
@@ -77,7 +80,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                         onClick = { viewModel.tareaLarga() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Tarea larga")
+                        Text("Iniciar")
                     }
 
                     Text(
@@ -85,21 +88,17 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                         fontWeight = FontWeight.Medium
                     )
 
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor =
-                                MaterialTheme.colorScheme.primaryContainer
-                        ),
+                    LinearProgressIndicator(
+                        progress = { progreso },
                         modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            "La tarea dura 4 segundos sin congelar " +
-                                    "la interfaz. El contador sigue respondiendo.",
-                            modifier = Modifier.padding(12.dp),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    )
+
+                    Text(
+                        text = "${(progreso * 100).toInt()} %",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
 
@@ -108,6 +107,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+
                     TituloTarjeta("Contar números primos")
 
                     Text(
@@ -124,8 +124,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Row(
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
                             onClick = {},
@@ -142,10 +141,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                         }
                     }
 
-                    Text(
-                        "Estado: pendiente",
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text("Estado: pendiente")
                 }
             }
 
@@ -154,6 +150,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+
                     TituloTarjeta("Dos cargas")
 
                     Text(
@@ -162,8 +159,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Row(
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
                             onClick = {},
@@ -180,10 +176,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                         }
                     }
 
-                    Text(
-                        "Estado: pendiente",
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text("Estado: pendiente")
                 }
             }
         }
