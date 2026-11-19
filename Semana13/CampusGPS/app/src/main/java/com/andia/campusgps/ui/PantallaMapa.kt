@@ -1,4 +1,3 @@
-
 package com.andia.campusgps.ui
 
 import android.Manifest
@@ -9,30 +8,33 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.andia.campusgps.model.UbicacionUi
-import com.andia.campusgps.util.formatearDistancia
+import com.andia.campusgps.ui.theme.*
 import com.andia.campusgps.viewmodel.MapaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMapa(vm: MapaViewModel) {
 
+    var mostrarInicio by rememberSaveable { mutableStateOf(true) }
+
+    if (mostrarInicio) {
+        PantallaBienvenida(onComenzar = { mostrarInicio = false })
+        return
+    }
+
+    val contexto = LocalContext.current
+
     val estado by vm.estado.collectAsState()
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()
-
-    val contexto = LocalContext.current
 
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -44,22 +46,16 @@ fun PantallaMapa(vm: MapaViewModel) {
         }
     }
 
-    fun tienePermiso(): Boolean {
-        val preciso = ContextCompat.checkSelfPermission(
-            contexto,
-            Manifest.permission.ACCESS_FINE_LOCATION
+    fun obtenerUbicacion() {
+        val fino = ContextCompat.checkSelfPermission(
+            contexto, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
         val aproximado = ContextCompat.checkSelfPermission(
-            contexto,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            contexto, Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
-        return preciso || aproximado
-    }
-
-    fun alPulsar() {
-        if (tienePermiso()) {
+        if (fino || aproximado) {
             vm.buscar()
         } else {
             lanzador.launch(
@@ -72,145 +68,55 @@ fun PantallaMapa(vm: MapaViewModel) {
     }
 
     fun abrirAjustes() {
-        val intent = Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-        ).apply {
-            data = Uri.fromParts(
-                "package",
-                contexto.packageName,
-                null
-            )
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", contexto.packageName, null)
         }
-
         contexto.startActivity(intent)
     }
 
-    val distanciaCercana = lugares.firstOrNull {
-        it.lugar.id == masCercano?.id
-    }?.metros
-
-    val textoDistancia = distanciaCercana?.let {
-        formatearDistancia(it)
-    } ?: "Sin calcular"
+    val cercano = lugares.firstOrNull { it.lugar.id == masCercano?.id }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "CampusGPS",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
+        containerColor = FondoApp,
+        topBar = { CabeceraCampus(cantidad = lugares.size) }
     ) { padding ->
 
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(padding)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             MapaUbicacion(
                 estado = estado,
                 lugares = lugares,
                 seleccionado = seleccionado,
                 masCercano = masCercano,
+                onSeleccionar = { id -> vm.seleccionar(id) },
+                onUbicacion = { obtenerUbicacion() },
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
+                    .weight(1f)
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
+            PanelCampus(
+                estado = estado,
+                lugarCercano = cercano,
+                onUbicacion = { obtenerUbicacion() },
+                onMasCercano = { masCercano?.let { vm.seleccionar(it.id) } },
+                onAbrirAjustes = { abrirAjustes() },
+                onReintentar = { obtenerUbicacion() }
+            )
 
-                Button(
-                    onClick = { alPulsar() },
-                    enabled = estado !is UbicacionUi.Buscando,
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Text(
-                        if (estado is UbicacionUi.Buscando) {
-                            "Buscando..."
-                        } else {
-                            "Obtener mi ubicación"
-                        }
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = {
-                        masCercano?.let { lugar ->
-                            vm.seleccionar(lugar.id)
-                        }
-                    },
-                    enabled = masCercano != null,
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Text("Ir al más cercano")
-                }
-
-                if (masCercano != null) {
-                    Text(
-                        text = "Más cercano: ${masCercano?.nombre} " +
-                                "($textoDistancia)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                }
-
-                when (val actual = estado) {
-
-                    is UbicacionUi.Lista -> {
-                        Text(
-                            text = "Latitud: ${actual.posicion.latitud} · " +
-                                    "Longitud: ${actual.posicion.longitud}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    is UbicacionUi.Error -> {
-                        MensajeError(
-                            error = actual,
-                            onAbrirAjustes = { abrirAjustes() },
-                            onReintentar = { alPulsar() },
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-                    }
-
-                    else -> {
-                        Text(
-                            text = "Pulsa el botón para empezar",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
+            // Lista fija de 220 dp, como pide el laboratorio
+            Surface(color = FondoApp) {
                 ListaLugares(
                     lugares = lugares,
                     seleccionado = seleccionado,
-                    onClick = { id ->
-                        vm.seleccionar(id)
-                    },
+                    onClick = { id -> vm.seleccionar(id) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(220.dp)
+                        .navigationBarsPadding()
                 )
             }
         }
