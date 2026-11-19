@@ -3,22 +3,32 @@ package com.andia.centrotareas.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.andia.centrotareas.model.PrimosUi
 import com.andia.centrotareas.viewmodel.TareasViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaTareas(viewModel: TareasViewModel) {
     var toques by remember { mutableIntStateOf(0) }
+    var numero by rememberSaveable { mutableStateOf("500000") }
 
     val mensaje by viewModel.mensaje.collectAsState()
     val progreso by viewModel.progreso.collectAsState()
     val corriendo by viewModel.corriendo.collectAsState()
+    val primos by viewModel.primos.collectAsState()
+
+    val calculando = primos is PrimosUi.Calculando
+    val numeroValido = numero.toIntOrNull()?.let { it >= 2 } == true
 
     Scaffold(
         topBar = {
@@ -69,7 +79,6 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
                     TituloTarjeta("Tarea con progreso")
 
                     Text(
@@ -110,8 +119,7 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     Text(
-                        text = "${(progreso * 100).toInt()} %",
-                        style = MaterialTheme.typography.bodyMedium,
+                        "${(progreso * 100).toInt()} %",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -123,7 +131,6 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
                     TituloTarjeta("Contar números primos")
 
                     Text(
@@ -132,33 +139,107 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     )
 
                     OutlinedTextField(
-                        value = "500000",
-                        onValueChange = {},
-                        readOnly = true,
+                        value = numero,
+                        onValueChange = { nuevo ->
+                            if (nuevo.all { it.isDigit() }) {
+                                numero = nuevo
+                            }
+                        },
                         label = { Text("Número límite") },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number
+                        ),
+                        singleLine = true,
+                        enabled = !calculando,
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     Row(
                         horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
+                            Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
-                            onClick = {},
-                            enabled = false
+                            onClick = {
+                                numero.toIntOrNull()?.let {
+                                    viewModel.contar(it)
+                                }
+                            },
+                            enabled = !calculando && numeroValido,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Contar")
                         }
 
                         OutlinedButton(
-                            onClick = {},
-                            enabled = false
+                            onClick = {
+                                viewModel.cancelarPrimos()
+                            },
+                            enabled = calculando,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Cancelar")
                         }
                     }
 
-                    Text("Estado: pendiente")
+                    when (val estado = primos) {
+                        PrimosUi.Inicial -> {
+                            Text("Estado: pendiente")
+                        }
+
+                        PrimosUi.Calculando -> {
+                            Row(
+                                horizontalArrangement =
+                                    Arrangement.spacedBy(12.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp
+                                )
+
+                                Text("Calculando números primos...")
+                            }
+                        }
+
+                        is PrimosUi.Listo -> {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFE3F3E8)
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement =
+                                        Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        "Cálculo completado",
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF17643C)
+                                    )
+
+                                    Text(
+                                        "Primos encontrados: ${estado.cantidad}",
+                                        color = Color(0xFF17643C)
+                                    )
+
+                                    Text(
+                                        "Tiempo: ${estado.milisegundos} ms",
+                                        color = Color(0xFF17643C)
+                                    )
+                                }
+                            }
+                        }
+
+                        PrimosUi.Cancelado -> {
+                            Text(
+                                "Estado: Cancelado",
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                 }
             }
 
@@ -167,7 +248,6 @@ fun PantallaTareas(viewModel: TareasViewModel) {
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
                     TituloTarjeta("Dos cargas")
 
                     Text(

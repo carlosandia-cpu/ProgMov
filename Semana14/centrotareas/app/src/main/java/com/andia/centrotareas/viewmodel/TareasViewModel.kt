@@ -89,6 +89,44 @@ class TareasViewModel(
     val primos: StateFlow<PrimosUi> =
         _primos.asStateFlow()
 
+    private var trabajoPrimos: Job? = null
+
+    fun contar(hasta: Int) {
+        if (hasta < 2 || _primos.value is PrimosUi.Calculando) {
+            return
+        }
+
+        _primos.value = PrimosUi.Calculando
+
+        trabajoPrimos = viewModelScope.launch {
+            val inicio = System.currentTimeMillis()
+
+            try {
+                val cantidad = repo.contarPrimos(hasta)
+                val tiempo = System.currentTimeMillis() - inicio
+
+                _primos.value = PrimosUi.Listo(
+                    cantidad = cantidad,
+                    milisegundos = tiempo
+                )
+
+            } catch (e: CancellationException) {
+                _primos.value = PrimosUi.Cancelado
+                throw e
+
+            } finally {
+                trabajoPrimos = null
+            }
+        }
+    }
+
+    fun cancelarPrimos() {
+        if (_primos.value !is PrimosUi.Calculando) return
+
+        trabajoPrimos?.cancel()
+        _primos.value = PrimosUi.Cancelado
+    }
+
     private val _carga =
         MutableStateFlow<CargaUi>(CargaUi.Inicial)
 
