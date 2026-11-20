@@ -213,4 +213,73 @@ El proyecto se encuentra en el repositorio del curso **ProgMov**, en la carpeta 
 - **Fase 2 (`mejora-ia`):** al menos tres mejoras funcionales, tres commits y el registro de asistencia de IA en `PROMPTS.md`.
 - **Documentación:** este `README.md`, las cinco capturas y las pruebas de aceptación.
 
-> La Fase 2 se documentará una vez implementada y probada; este README no da esas mejoras por realizadas.
+## Fase 2 — Mejoras implementadas con IA
+
+En esta fase se utilizó Gemini como herramienta de apoyo para implementar tres mejoras funcionales en la rama `mejora-ia`. Se mantuvo la arquitectura MVVM + Repository y se verificó la compatibilidad con las funcionalidades desarrolladas en la Fase 1.
+
+### Mejora 1: Filtros por categoría
+
+Se implementaron filtros mediante `FilterChip` de Material 3, permitiendo visualizar los lugares según su categoría: Todas, Estudio, Comida, Eventos y Servicios.
+
+El filtro seleccionado se administra mediante `StateFlow` en `MapaViewModel`. Al cambiar de categoría, se actualizan simultáneamente los marcadores del mapa, la lista de destinos y el lugar más cercano visible.
+
+**Resultado:** los filtros muestran correctamente los lugares de cada categoría.
+
+### Mejora 2: Radio de cercanía
+
+Se incorporó un selector de radio con cuatro opciones: Todos, 100 m, 200 m y 500 m.
+
+Mediante `Circle` de Google Maps Compose, se dibuja un círculo centrado en la ubicación actual del usuario. Los destinos y marcadores se filtran según la distancia y la categoría seleccionadas.
+
+El ViewModel administra ambos filtros y evita presentar distancias falsas cuando todavía no se dispone de ubicación.
+
+**Resultado:** se comprobó el filtrado para los radios de 100, 200 y 500 metros.
+
+### Mejora 3: Mapa en modo oscuro
+
+Se implementó un modo oscuro utilizando `MapStyleOptions`, `MapProperties` y un archivo JSON de estilos en `res/raw`.
+
+Se incorporó un botón para alternar entre modo claro y oscuro sin reiniciar la aplicación. También se adaptaron los colores de los paneles, las tarjetas, los filtros y los mensajes para mantener la coherencia visual.
+
+Se utilizó `rememberSaveable` para conservar la selección del modo durante los cambios de configuración.
+
+**Resultado:** se comprobó visualmente que el mapa alterna entre ambos estilos y conserva los marcadores y filtros.
+
+### Arquitectura y decisiones técnicas
+
+Las mejoras respetan la separación de responsabilidades:
+
+- **View:** presenta el mapa, los filtros, los círculos y los componentes visuales.
+- **ViewModel:** administra el estado y combina los filtros mediante StateFlow.
+- **Repository:** proporciona los datos de los lugares y la ubicación.
+
+No se modificó la lógica original de obtención de ubicación para las mejoras visuales.
+
+### Validación
+
+Se verificaron los siguientes escenarios:
+
+| Prueba | Resultado |
+|---|---|
+| Filtros por categoría | Correcto |
+| Radio de 100 metros | Correcto |
+| Radio de 200 metros | Correcto |
+| Radio de 500 metros | Correcto |
+| Visualización del círculo | Correcto |
+| Combinación de categoría y radio | Correcto en las pruebas realizadas |
+| Alternancia de mapa claro y oscuro | Correcto |
+| Visualización de marcadores | Correcto |
+
+La compilación final y las pruebas de regresión deben confirmarse después de los últimos ajustes de los paneles oscuros.
+
+### Evidencias de la Fase 2
+
+Las capturas de pantalla se almacenan en la carpeta `capturas/` del proyecto.
+
+Se incluyen evidencias de los filtros por categoría, los radios de cercanía y el mapa en sus modalidades clara y oscura.
+
+### Uso de inteligencia artificial
+
+Gemini se utilizó para proponer implementaciones. El código generado fue revisado y ajustado para conservar la arquitectura, corregir incompatibilidades y mantener las funcionalidades existentes.
+
+El detalle de los prompts utilizados, las respuestas y las decisiones técnicas se encuentra en `PROMPTS.md`.
