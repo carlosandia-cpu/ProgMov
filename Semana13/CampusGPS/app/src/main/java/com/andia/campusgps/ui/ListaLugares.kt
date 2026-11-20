@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -86,8 +87,17 @@ fun ListaLugares(
     seleccionado: Int?,
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    sinUbicacionParaRadio: Boolean = false
+    sinUbicacionParaRadio: Boolean = false,
+    esModoOscuro: Boolean = false
 ) {
+    val textoPrincipalModo = if (esModoOscuro) Color(0xFFF1F6FF) else TextoPrincipal
+    val textoSecundarioModo = if (esModoOscuro) Color(0xFFB7C9DD) else TextoSecundario
+    val fondoTarjeta = if (esModoOscuro) Color(0xFF1D3049) else Blanco
+    val fondoSeleccionado = if (esModoOscuro) Color(0xFF2B4360) else AzulClaro
+    val bordeModo = if (esModoOscuro) Color(0xFF47617F) else BordeSuave
+    val azulAcento = if (esModoOscuro) Color(0xFF5CA8FF) else AzulPrincipal
+    val verdeModo = if (esModoOscuro) Color(0xFF6DE8BF) else VerdeCampus
+
     if (lugares.isEmpty()) {
         Box(
             modifier = modifier
@@ -110,7 +120,7 @@ fun ListaLugares(
                         "No hay lugares en esta selección",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextoPrincipal,
+                    color = textoPrincipalModo,
                     textAlign = TextAlign.Center
                 )
                 Text(
@@ -119,7 +129,7 @@ fun ListaLugares(
                     else
                         "Prueba un radio mayor o cambia la categoría.",
                     fontSize = 13.sp,
-                    color = TextoSecundario,
+                    color = textoSecundarioModo,
                     textAlign = TextAlign.Center
                 )
             }
@@ -148,14 +158,14 @@ fun ListaLugares(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = if (activo) {
-                            AzulClaro
+                            fondoSeleccionado
                         } else {
-                            Blanco
+                            fondoTarjeta
                         }
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         if (activo) 2.dp else 1.dp,
-                        if (activo) AzulPrincipal else BordeSuave
+                        if (activo) azulAcento else bordeModo
                     ),
                     elevation = CardDefaults.cardElevation(
                         defaultElevation = if (activo) 3.dp else 1.dp
@@ -181,7 +191,7 @@ fun ListaLugares(
                                 text = item.lugar.nombre,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
-                                color = TextoPrincipal,
+                                color = textoPrincipalModo,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -189,13 +199,13 @@ fun ListaLugares(
                             Text(
                                 text = item.lugar.categoria,
                                 fontSize = 11.sp,
-                                color = TextoSecundario
+                                color = textoSecundarioModo
                             )
                         }
 
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = VerdeClaro
+                            color = if (esModoOscuro) Color(0xFF204A46) else VerdeClaro
                         ) {
                             Text(
                                 text = item.metros?.let {
@@ -207,7 +217,7 @@ fun ListaLugares(
                                 ),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = VerdeCampus
+                                color = verdeModo
                             )
                         }
                     }

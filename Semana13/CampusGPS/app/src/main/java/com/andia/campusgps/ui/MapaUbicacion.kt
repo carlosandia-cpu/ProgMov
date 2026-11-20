@@ -5,8 +5,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import android.util.Log
+import com.andia.campusgps.R
 import com.andia.campusgps.model.Lugar
 import com.andia.campusgps.model.LugarConDistancia
 import com.andia.campusgps.model.UbicacionUi
@@ -16,6 +19,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.*
 
 @Composable
@@ -25,10 +29,28 @@ fun MapaUbicacion(
     seleccionado: Int?,
     masCercano: Lugar?,
     radioMetros: Float?,
+    esModoOscuro: Boolean,
+    onToggleModoOscuro: () -> Unit,
     onSeleccionar: (Int) -> Unit,
     onUbicacion: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val contexto = LocalContext.current
+
+    val mapProperties = remember(esModoOscuro, contexto) {
+        val estilo = if (esModoOscuro) {
+            try {
+                MapStyleOptions.loadRawResourceStyle(contexto, R.raw.map_style_dark)
+            } catch (e: Exception) {
+                Log.e("CampusGPS", "No se pudo cargar el estilo oscuro del mapa", e)
+                null
+            }
+        } else {
+            null
+        }
+        MapProperties(mapStyleOptions = estilo)
+    }
+
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             LatLng(-12.0464, -77.0428),
@@ -67,6 +89,7 @@ fun MapaUbicacion(
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = camara,
+            properties = mapProperties,
             uiSettings = MapUiSettings(
                 zoomControlsEnabled = false,
                 compassEnabled = true,
@@ -132,6 +155,25 @@ fun MapaUbicacion(
                         }
                     )
                 }
+            }
+        }
+
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp
+        ) {
+            IconButton(
+                onClick = onToggleModoOscuro,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Text(
+                    text = if (esModoOscuro) "☀️" else "🌙",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
 

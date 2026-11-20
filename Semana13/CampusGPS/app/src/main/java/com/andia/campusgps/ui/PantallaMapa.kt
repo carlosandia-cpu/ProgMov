@@ -7,7 +7,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -16,11 +16,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -28,82 +27,6 @@ import com.andia.campusgps.model.UbicacionUi
 import com.andia.campusgps.ui.theme.*
 import com.andia.campusgps.util.formatearDistancia
 import com.andia.campusgps.viewmodel.MapaViewModel
-
-@Composable
-private fun PantallaBienvenida1(
-    onComenzar: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        AzulNoche,
-                        AzulPrincipal,
-                        AzulNoche
-                    )
-                )
-            )
-            .padding(28.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp)
-        ) {
-            Text(
-                text = "📍",
-                fontSize = 78.sp
-            )
-
-            Text(
-                text = "CampusGPS",
-                color = Blanco,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 38.sp
-            )
-
-            Text(
-                text = "Tu campus, más cerca",
-                color = AzulSuave,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                text = "Explora, descubre y encuentra los lugares de tu campus desde un solo mapa.",
-                color = Blanco,
-                fontSize = 15.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 23.sp
-            )
-        }
-
-        Button(
-            onClick = onComenzar,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Blanco,
-                contentColor = AzulNoche
-            ),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text(
-                text = "Comenzar  →",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,6 +50,19 @@ fun PantallaMapa(vm: MapaViewModel) {
     val categoriaSeleccionada by vm.categoriaSeleccionada.collectAsState()
     val radioSeleccionado by vm.radioSeleccionado.collectAsState()
     val radioMetros by vm.radioMetros.collectAsState()
+
+    var esModoOscuro by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    val fondoPantalla = if (esModoOscuro) Color(0xFF111C2D) else FondoApp
+    val fondoPanel = if (esModoOscuro) Color(0xFF1D3049) else Blanco
+    val fondoTarjeta = if (esModoOscuro) Color(0xFF2B4360) else AzulClaro
+    val textoPrincipalModo = if (esModoOscuro) Color(0xFFF1F6FF) else TextoPrincipal
+    val textoSecundarioModo = if (esModoOscuro) Color(0xFFB7C9DD) else TextoSecundario
+    val verdeModo = if (esModoOscuro) Color(0xFF6DE8BF) else VerdeCampus
+    val azulAcento = if (esModoOscuro) Color(0xFF5CA8FF) else AzulPrincipal
+    val bordeModo = if (esModoOscuro) Color(0xFF47617F) else BordeSuave
 
     val contexto = LocalContext.current
 
@@ -193,7 +129,7 @@ fun PantallaMapa(vm: MapaViewModel) {
     } ?: "Sin calcular"
 
     Scaffold(
-        containerColor = FondoApp,
+        containerColor = fondoPantalla,
         topBar = {
             Surface(
                 color = AzulNoche,
@@ -273,6 +209,8 @@ fun PantallaMapa(vm: MapaViewModel) {
                 seleccionado = seleccionado,
                 masCercano = masCercano,
                 radioMetros = radioMetros,
+                esModoOscuro = esModoOscuro,
+                onToggleModoOscuro = { esModoOscuro = !esModoOscuro },
                 onSeleccionar = { id ->
                     vm.seleccionar(id)
                 },
@@ -287,7 +225,7 @@ fun PantallaMapa(vm: MapaViewModel) {
             // Panel inferior
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Blanco,
+                color = fondoPanel,
                 shape = RoundedCornerShape(
                     topStart = 28.dp,
                     topEnd = 28.dp
@@ -310,7 +248,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                                 text = "DESTINO MÁS CERCANO",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextoSecundario,
+                                color = textoSecundarioModo,
                                 letterSpacing = 1.sp
                             )
 
@@ -318,14 +256,15 @@ fun PantallaMapa(vm: MapaViewModel) {
                                 text = "Explora los alrededores",
                                 fontSize = 19.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextoPrincipal
+                                color = textoPrincipalModo
                             )
                         }
 
                         TextButton(
-                            onClick = {
-                                mostrarLugares = true
-                            }
+                            onClick = { mostrarLugares = true },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = azulAcento
+                            )
                         ) {
                             Text(
                                 "Ver lugares",
@@ -344,8 +283,9 @@ fun PantallaMapa(vm: MapaViewModel) {
                             },
                             shape = RoundedCornerShape(18.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = AzulClaro
-                            )
+                                containerColor = fondoTarjeta
+                            ),
+                            border = BorderStroke(1.dp, bordeModo)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -364,19 +304,19 @@ fun PantallaMapa(vm: MapaViewModel) {
                                         text = lugarCercano.lugar.nombre,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp,
-                                        color = TextoPrincipal
+                                        color = textoPrincipalModo
                                     )
 
                                     Text(
                                         text = lugarCercano.lugar.categoria,
                                         fontSize = 12.sp,
-                                        color = TextoSecundario
+                                        color = textoSecundarioModo
                                     )
 
                                     Text(
                                         text = textoDistancia,
                                         fontSize = 13.sp,
-                                        color = VerdeCampus,
+                                        color = verdeModo,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -385,7 +325,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                     } else {
                         Text(
                             text = "Obtén tu ubicación para descubrir el destino más cercano.",
-                            color = TextoSecundario,
+                            color = textoSecundarioModo,
                             fontSize = 13.sp
                         )
                     }
@@ -403,6 +343,12 @@ fun PantallaMapa(vm: MapaViewModel) {
                             enabled = estado !is UbicacionUi.Buscando,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AzulPrincipal,
+                                contentColor = Blanco,
+                                disabledContainerColor = bordeModo,
+                                disabledContentColor = textoSecundarioModo
+                            ),
                             contentPadding = PaddingValues(
                                 horizontal = 8.dp,
                                 vertical = 12.dp
@@ -426,6 +372,11 @@ fun PantallaMapa(vm: MapaViewModel) {
                             enabled = masCercano != null,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = textoPrincipalModo,
+                                disabledContentColor = textoSecundarioModo
+                            ),
+                            border = BorderStroke(1.dp, bordeModo),
                             contentPadding = PaddingValues(
                                 horizontal = 8.dp,
                                 vertical = 12.dp
@@ -445,20 +396,23 @@ fun PantallaMapa(vm: MapaViewModel) {
                         is UbicacionUi.Lista -> {
                             Text(
                                 text = "Ubicación actualizada correctamente",
-                                color = VerdeCampus,
+                                color = verdeModo,
                                 fontSize = 11.sp
                             )
                         }
 
                         is UbicacionUi.Buscando -> {
                             LinearProgressIndicator(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                color = azulAcento,
+                                trackColor = bordeModo
                             )
                         }
 
                         is UbicacionUi.Error -> {
                             MensajeError(
                                 error = actual,
+                                esModoOscuro = esModoOscuro,
                                 onAbrirAjustes = {
                                     abrirAjustes()
                                 },
@@ -472,7 +426,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                             Text(
                                 text = "Pulsa Mi ubicación para comenzar",
                                 fontSize = 11.sp,
-                                color = TextoSecundario
+                                color = textoSecundarioModo
                             )
                         }
                     }
@@ -487,7 +441,7 @@ fun PantallaMapa(vm: MapaViewModel) {
             onDismissRequest = {
                 mostrarLugares = false
             },
-            containerColor = FondoApp,
+            containerColor = fondoPantalla,
             sheetState = rememberModalBottomSheetState(
                 skipPartiallyExpanded = true
             )
@@ -501,7 +455,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                     text = "Lugares del campus",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = TextoPrincipal,
+                    color = textoPrincipalModo,
                     modifier = Modifier.padding(
                         horizontal = 20.dp
                     )
@@ -510,7 +464,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                 Text(
                     text = "${lugares.size} destinos disponibles · Ordenados por distancia",
                     fontSize = 12.sp,
-                    color = TextoSecundario,
+                    color = textoSecundarioModo,
                     modifier = Modifier.padding(
                         horizontal = 20.dp,
                         vertical = 4.dp
@@ -522,7 +476,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                     text = "Categoría",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextoSecundario,
+                    color = textoSecundarioModo,
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp)
                 )
                 LazyRow(
@@ -547,14 +501,14 @@ fun PantallaMapa(vm: MapaViewModel) {
                                 )
                             },
                             colors = FilterChipDefaults.filterChipColors(
-                                containerColor = AzulClaro,
-                                labelColor = TextoPrincipal,
+                                containerColor = fondoTarjeta,
+                                labelColor = textoPrincipalModo,
                                 selectedContainerColor = AzulPrincipal,
                                 selectedLabelColor = Blanco
                             ),
                             border = androidx.compose.foundation.BorderStroke(
                                 width = 1.dp,
-                                color = if (seleccionada) AzulPrincipal else BordeSuave
+                                color = if (seleccionada) azulAcento else bordeModo
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -566,7 +520,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                     text = "Radio de cercanía",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextoSecundario,
+                    color = textoSecundarioModo,
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp)
                 )
                 LazyRow(
@@ -591,14 +545,14 @@ fun PantallaMapa(vm: MapaViewModel) {
                                 )
                             },
                             colors = FilterChipDefaults.filterChipColors(
-                                containerColor = AzulClaro,
-                                labelColor = TextoPrincipal,
+                                containerColor = fondoTarjeta,
+                                labelColor = textoPrincipalModo,
                                 selectedContainerColor = AzulPrincipal,
                                 selectedLabelColor = Blanco
                             ),
                             border = androidx.compose.foundation.BorderStroke(
                                 width = 1.dp,
-                                color = if (seleccionada) AzulPrincipal else BordeSuave
+                                color = if (seleccionada) azulAcento else bordeModo
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -609,6 +563,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                     lugares = lugares,
                     seleccionado = seleccionado,
                     sinUbicacionParaRadio = radioMetros != null && estado !is UbicacionUi.Lista,
+                    esModoOscuro = esModoOscuro,
                     onClick = { id ->
                         vm.seleccionar(id)
                         mostrarLugares = false
