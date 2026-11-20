@@ -1,4 +1,3 @@
-
 package com.andia.campusgps.ui
 
 import androidx.compose.foundation.layout.*
@@ -12,6 +11,7 @@ import com.andia.campusgps.model.Lugar
 import com.andia.campusgps.model.LugarConDistancia
 import com.andia.campusgps.model.UbicacionUi
 import com.andia.campusgps.ui.theme.AzulNoche
+import com.andia.campusgps.ui.theme.AzulPrincipal
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -24,6 +24,7 @@ fun MapaUbicacion(
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
     masCercano: Lugar?,
+    radioMetros: Float?,
     onSeleccionar: (Int) -> Unit,
     onUbicacion: () -> Unit,
     modifier: Modifier = Modifier
@@ -73,18 +74,28 @@ fun MapaUbicacion(
             )
         ) {
             if (estado is UbicacionUi.Lista) {
+                val centro = LatLng(
+                    estado.posicion.latitud,
+                    estado.posicion.longitud
+                )
+
                 Marker(
-                    state = rememberUpdatedMarkerState(
-                        position = LatLng(
-                            estado.posicion.latitud,
-                            estado.posicion.longitud
-                        )
-                    ),
+                    state = rememberUpdatedMarkerState(position = centro),
                     title = "Estás aquí",
                     icon = BitmapDescriptorFactory.defaultMarker(
                         BitmapDescriptorFactory.HUE_RED
                     )
                 )
+
+                if (radioMetros != null) {
+                    Circle(
+                        center = centro,
+                        radius = radioMetros.toDouble(),
+                        strokeColor = AzulPrincipal,
+                        strokeWidth = 4f,
+                        fillColor = AzulPrincipal.copy(alpha = 0.15f)
+                    )
+                }
             }
 
             lugares.forEach { item ->

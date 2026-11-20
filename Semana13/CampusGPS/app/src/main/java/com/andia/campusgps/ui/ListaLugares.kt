@@ -85,7 +85,8 @@ fun ListaLugares(
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
     onClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sinUbicacionParaRadio: Boolean = false
 ) {
     if (lugares.isEmpty()) {
         Box(
@@ -103,14 +104,20 @@ fun ListaLugares(
                     fontSize = 36.sp
                 )
                 Text(
-                    text = "No hay lugares en esta categoría",
+                    text = if (sinUbicacionParaRadio)
+                        "Primero obtén tu ubicación"
+                    else
+                        "No hay lugares en esta selección",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextoPrincipal,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "Intenta seleccionando otra opción.",
+                    text = if (sinUbicacionParaRadio)
+                        "Pulsa Mi ubicación para calcular las distancias y aplicar el radio."
+                    else
+                        "Prueba un radio mayor o cambia la categoría.",
                     fontSize = 13.sp,
                     color = TextoSecundario,
                     textAlign = TextAlign.Center

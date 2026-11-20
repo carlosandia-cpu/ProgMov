@@ -125,6 +125,8 @@ fun PantallaMapa(vm: MapaViewModel) {
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()
     val categoriaSeleccionada by vm.categoriaSeleccionada.collectAsState()
+    val radioSeleccionado by vm.radioSeleccionado.collectAsState()
+    val radioMetros by vm.radioMetros.collectAsState()
 
     val contexto = LocalContext.current
 
@@ -270,6 +272,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                 lugares = lugares,
                 seleccionado = seleccionado,
                 masCercano = masCercano,
+                radioMetros = radioMetros,
                 onSeleccionar = { id ->
                     vm.seleccionar(id)
                 },
@@ -478,7 +481,7 @@ fun PantallaMapa(vm: MapaViewModel) {
         }
     }
 
-    // Panel deslizable de los cinco destinos
+    // Panel deslizable de los destinos
     if (mostrarLugares) {
         ModalBottomSheet(
             onDismissRequest = {
@@ -510,14 +513,22 @@ fun PantallaMapa(vm: MapaViewModel) {
                     color = TextoSecundario,
                     modifier = Modifier.padding(
                         horizontal = 20.dp,
-                        vertical = 6.dp
+                        vertical = 4.dp
                     )
                 )
 
+                // Filtro por Categoría
+                Text(
+                    text = "Categoría",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoSecundario,
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp)
+                )
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 6.dp),
+                        .padding(vertical = 4.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -550,16 +561,61 @@ fun PantallaMapa(vm: MapaViewModel) {
                     }
                 }
 
+                // Filtro por Radio de Cercanía
+                Text(
+                    text = "Radio de cercanía",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoSecundario,
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp)
+                )
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(vm.radios) { rad ->
+                        val seleccionada = rad == radioSeleccionado
+                        FilterChip(
+                            selected = seleccionada,
+                            onClick = {
+                                vm.seleccionarRadio(rad)
+                            },
+                            label = {
+                                Text(
+                                    text = rad,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (seleccionada) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = AzulClaro,
+                                labelColor = TextoPrincipal,
+                                selectedContainerColor = AzulPrincipal,
+                                selectedLabelColor = Blanco
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 1.dp,
+                                color = if (seleccionada) AzulPrincipal else BordeSuave
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
+                }
+
                 ListaLugares(
                     lugares = lugares,
                     seleccionado = seleccionado,
+                    sinUbicacionParaRadio = radioMetros != null && estado !is UbicacionUi.Lista,
                     onClick = { id ->
                         vm.seleccionar(id)
                         mostrarLugares = false
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 450.dp)
+                        .heightIn(max = 420.dp)
                 )
             }
         }

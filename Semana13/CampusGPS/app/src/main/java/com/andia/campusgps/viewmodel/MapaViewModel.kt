@@ -41,12 +41,38 @@ class MapaViewModel(
 
     val categorias: List<String> = listOf("Todas", "Estudio", "Comida", "Eventos", "Servicios")
 
+    private val _radioSeleccionado = MutableStateFlow("Todos")
+    val radioSeleccionado: StateFlow<String> = _radioSeleccionado.asStateFlow()
+
+    val radios: List<String> = listOf("Todos", "100 m", "200 m", "500 m")
+
+    val radioMetros: StateFlow<Float?> =
+        _radioSeleccionado.map { radio ->
+            when (radio) {
+                "100 m" -> 100f
+                "200 m" -> 200f
+                "500 m" -> 500f
+                else -> null
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
     val lugares: StateFlow<List<LugarConDistancia>> =
-        combine(_todosLosLugares, _categoriaSeleccionada) { lista, categoria ->
-            if (categoria == "Todas") {
-                lista
-            } else {
-                lista.filter { it.lugar.categoria.equals(categoria, ignoreCase = true) }
+        combine(_todosLosLugares, _categoriaSeleccionada, _radioSeleccionado) { lista, categoria, radioStr ->
+            val limiteRadio = when (radioStr) {
+                "100 m" -> 100f
+                "200 m" -> 200f
+                "500 m" -> 500f
+                else -> null
+            }
+
+            lista.filter { item ->
+                val coincideCategoria = (categoria == "Todas") || item.lugar.categoria.equals(categoria, ignoreCase = true)
+                val coincideRadio = (limiteRadio == null) || (item.metros != null && item.metros <= limiteRadio)
+                coincideCategoria && coincideRadio
             }
         }.stateIn(
             scope = viewModelScope,
@@ -107,16 +133,31 @@ class MapaViewModel(
 
     fun seleccionarCategoria(categoria: String) {
         _categoriaSeleccionada.value = categoria
-        val idSeleccionado = _seleccionado.value
-        if (idSeleccionado != null) {
-            val listaFiltrada = if (categoria == "Todas") {
-                _todosLosLugares.value
-            } else {
-                _todosLosLugares.value.filter { it.lugar.categoria.equals(categoria, ignoreCase = true) }
-            }
-            if (listaFiltrada.none { it.lugar.id == idSeleccionado }) {
-                _seleccionado.value = null
-            }
+        verificarSeleccionValida()
+    }
+
+    fun seleccionarRadio(radio: String) {
+        _radioSeleccionado.value = radio
+        verificarSeleccionValida()
+    }
+
+    private fun verificarSeleccionValida() {
+        val idSeleccionado = _seleccionado.value ?: return
+        val cat = _categoriaSeleccionada.value
+        val radioStr = _radioSeleccionado.value
+        val limiteRadio = when (radioStr) {
+            "100 m" -> 100f
+            "200 m" -> 200f
+            "500 m" -> 500f
+            else -> null
+        }
+        val listaFiltrada = _todosLosLugares.value.filter { item ->
+            val coincideCategoria = (cat == "Todas") || item.lugar.categoria.equals(cat, ignoreCase = true)
+            val coincideRadio = (limiteRadio == null) || (item.metros != null && item.metros <= limiteRadio)
+            coincideCategoria && coincideRadio
+        }
+        if (listaFiltrada.none { it.lugar.id == idSeleccionado }) {
+            _seleccionado.value = null
         }
     }
 
@@ -129,6 +170,7 @@ class MapaViewModel(
                 )
             }
             .sortedBy { it.metros }
+        verificarSeleccionValida()
     }
 
     private fun manejarError(error: Throwable) {
