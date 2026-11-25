@@ -11,7 +11,10 @@ import com.tecsup.murocampus.viewmodel.PostsViewModel
 import com.tecsup.murocampus.viewmodel.UiState
 
 @Composable
-fun PantallaLista(vm: PostsViewModel) {
+fun PantallaLista(
+    vm: PostsViewModel,
+    onAbrir: (Int) -> Unit
+) {
 
     val estado by vm.lista.collectAsStateWithLifecycle()
 
@@ -29,9 +32,11 @@ fun PantallaLista(vm: PostsViewModel) {
         }
 
         is UiState.Exito -> {
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
+
                 items(
                     items = actual.datos,
                     key = { it.id }
@@ -40,7 +45,8 @@ fun PantallaLista(vm: PostsViewModel) {
                     TarjetaPost(
                         userId = post.userId,
                         title = post.title,
-                        body = post.body
+                        body = post.body,
+                        onClick = { onAbrir(post.id) }
                     )
                 }
             }
