@@ -35,9 +35,15 @@ class PostsViewModel(
 
     val usuarioFiltro = _usuarioFiltro.asStateFlow()
 
+    private val _busquedaQuery = MutableStateFlow("")
+
+    val busquedaQuery = _busquedaQuery.asStateFlow()
+
     private val _creacion = MutableStateFlow<UiState<Post>?>(null)
 
     val creacion = _creacion.asStateFlow()
+
+    private var postsOriginales: List<Post> = emptyList()
 
     private var detalleJob: Job? = null
     private var listaJob: Job? = null
@@ -65,12 +71,27 @@ class PostsViewModel(
 
             resultado
                 .onSuccess { posts ->
-                    _lista.value = UiState.Exito(posts)
+                    postsOriginales = posts
+                    _lista.value = UiState.Exito(aplicarFiltroBusqueda(posts, _busquedaQuery.value))
                 }
                 .onFailure { error ->
+                    postsOriginales = emptyList()
                     _lista.value = UiState.Error(mensajeDe(error))
                 }
         }
+    }
+
+    fun buscar(query: String) {
+        _busquedaQuery.value = query
+        if (_lista.value is UiState.Exito) {
+            _lista.value = UiState.Exito(aplicarFiltroBusqueda(postsOriginales, query))
+        }
+    }
+
+    private fun aplicarFiltroBusqueda(posts: List<Post>, query: String): List<Post> {
+        val q = query.trim()
+        if (q.isEmpty()) return posts
+        return posts.filter { it.title.contains(q, ignoreCase = true) }
     }
 
     fun filtrar(userId: Int?) {

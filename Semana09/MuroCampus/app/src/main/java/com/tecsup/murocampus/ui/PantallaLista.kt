@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,6 +25,7 @@ fun PantallaLista(
 
     val estado by vm.lista.collectAsStateWithLifecycle()
     val filtro by vm.usuarioFiltro.collectAsStateWithLifecycle()
+    val busqueda by vm.busquedaQuery.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -51,6 +55,32 @@ fun PantallaLista(
             }
         }
 
+        OutlinedTextField(
+            value = busqueda,
+            onValueChange = { vm.buscar(it) },
+            placeholder = { Text("Buscar por título...") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Buscar"
+                )
+            },
+            trailingIcon = {
+                if (busqueda.isNotEmpty()) {
+                    IconButton(onClick = { vm.buscar("") }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Limpiar búsqueda"
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+        )
+
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -75,7 +105,7 @@ fun PantallaLista(
                     if (actual.datos.isEmpty()) {
 
                         Text(
-                            text = "Sin publicaciones",
+                            text = if (busqueda.isNotBlank()) "Sin coincidencias" else "Sin publicaciones",
                             modifier = Modifier.align(
                                 Alignment.Center
                             )
