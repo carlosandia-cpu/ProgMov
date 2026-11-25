@@ -212,3 +212,57 @@ JSONPlaceholder únicamente simula la creación del recurso.
 - Se manejaron errores de conexión, servidor y serialización.
 - Se utilizaron corrutinas y StateFlow para gestionar
   las peticiones y los estados de la aplicación.****
+
+  
+## Fase 2: mejoras con IA (rama mejora-ia)
+
+Se utilizó Gemini de Android Studio para implementar tres mejoras sobre MuroCampus, manteniendo la arquitectura MVVM + Repository. Los prompts, las respuestas resumidas y el análisis técnico se encuentran en [PROMPTS.md](PROMPTS.md).
+
+### 1. Búsqueda por título
+
+Se agregó un buscador en `PantallaLista.kt` y un StateFlow en `PostsViewModel.kt`. El filtrado se realiza sobre las publicaciones descargadas, sin nuevas peticiones HTTP, ignorando mayúsculas y minúsculas. Se puede combinar con el filtro por usuario y limpiar con la X.
+
+<img src="capturas/06-busqueda.png" width="300" alt="Búsqueda por título en mayúsculas"> <img src="capturas/07-sin-coincidencias.png" width="300" alt="Sin coincidencias"> <img src="capturas/08-busqueda-filtro.png" width="300" alt="Búsqueda y filtro por usuario">
+
+**Verificación:** al escribir en el buscador con Logcat limpio no se observaron nuevas peticiones HTTP.
+
+<img src="capturas/15-busqueda-local-logcat.png" width="700" alt="Logcat durante la búsqueda local">
+
+### 2. Interceptor HTTP
+
+En `RetrofitClient.kt` se agregó un interceptor de OkHttp que incorpora el encabezado `Accept: application/json`. Se utiliza `header()` para reemplazar cualquier valor previo y se registra antes del interceptor de logging para que el encabezado sea visible en Logcat.
+
+<img src="capturas/09-interceptor.png" width="700" alt="Encabezado Accept en Logcat">
+
+### 3. Eliminar publicaciones
+
+Se incorporó `@DELETE("posts/{id}")` con `@Path` y `Response<Unit>` en `PostApi.kt`. El Repository devuelve `Result<Unit>` y el ViewModel gestiona la operación con corrutinas y StateFlow. La pantalla de detalle solicita confirmación y, al obtener éxito, vuelve a la lista retirando la publicación en memoria.
+
+<img src="capturas/10-detalle-eliminar.png" width="300" alt="Botón Eliminar"> <img src="capturas/11-confirmacion-eliminar.png" width="300" alt="Confirmación de eliminación"> <img src="capturas/12-lista-actualizada.png" width="300" alt="Lista actualizada">
+
+La petición DELETE se observa en Logcat. JSONPlaceholder simula el borrado, por lo que la publicación puede reaparecer al volver a consultar el servidor.
+
+<img src="capturas/13-delete-logcat.png" width="700" alt="Petición DELETE registrada">
+
+La búsqueda y el filtro por usuario continúan funcionando después de la eliminación.
+
+<img src="capturas/14-busqueda-post-eliminacion.png" width="300" alt="Búsqueda combinada después de eliminar">
+
+### Pruebas de las mejoras
+
+| Prueba | Resultado |
+|---|---|
+| Búsqueda por título y mayúsculas | Correcto |
+| Búsqueda sin coincidencias y limpieza | Correcto |
+| Búsqueda combinada con usuario | Correcto |
+| Búsqueda local sin nuevas peticiones | Correcto en la prueba de Logcat |
+| Encabezado Accept en Logcat | Correcto |
+| Diálogo de confirmación de eliminación | Correcto |
+| Regreso a la lista sin la publicación eliminada | Correcto |
+| Petición DELETE | Observada en Logcat |
+| Código HTTP de respuesta DELETE | Pendiente de registrar en Logcat |
+| Cancelar eliminación y reintentar sin internet | Pendiente de confirmar |
+
+### Conclusión de la Fase 2
+
+Las mejoras permiten buscar publicaciones localmente, centralizar encabezados HTTP y eliminar publicaciones mediante el servicio REST. Se mantuvo la separación de responsabilidades entre interfaz, ViewModel, Repository y API. Gemini facilitó la implementación; los cambios se revisaron y se realizaron pruebas de funcionamiento en el emulador.
