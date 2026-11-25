@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tecsup.murocampus.data.PostRepository
 import com.tecsup.murocampus.model.Post
 import com.tecsup.murocampus.model.Comentario
+import com.tecsup.murocampus.model.NuevoPost
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,8 +34,13 @@ class PostsViewModel(
 
     val usuarioFiltro = _usuarioFiltro.asStateFlow()
 
+    private val _creacion = MutableStateFlow<UiState<Post>?>(null)
+
+    val creacion = _creacion.asStateFlow()
+
     private var detalleJob: Job? = null
     private var listaJob: Job? = null
+    private var crearJob: Job? = null
 
     init {
         cargar()
@@ -108,5 +114,36 @@ class PostsViewModel(
 
     fun cerrarDetalle() {
         detalleJob?.cancel()
+    }
+
+    fun publicar(titulo: String, texto: String) {
+
+        if (titulo.isBlank() || texto.isBlank()) return
+
+        if (_creacion.value == UiState.Cargando) return
+
+        crearJob = viewModelScope.launch {
+
+            _creacion.value = UiState.Cargando
+
+            val nuevo = NuevoPost(
+                userId = 1,
+                title = titulo.trim(),
+                body = texto.trim()
+            )
+
+            repo.crear(nuevo)
+                .onSuccess { post ->
+                    _creacion.value = UiState.Exito(post)
+                }
+                .onFailure { error ->
+                    _creacion.value = UiState.Error(mensajeDe(error))
+                }
+        }
+    }
+
+    fun limpiarCreacion() {
+        crearJob?.cancel()
+        _creacion.value = null
     }
 }
