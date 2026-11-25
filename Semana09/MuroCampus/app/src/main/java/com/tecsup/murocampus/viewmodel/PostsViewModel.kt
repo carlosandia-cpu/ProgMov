@@ -43,11 +43,16 @@ class PostsViewModel(
 
     val creacion = _creacion.asStateFlow()
 
+    private val _eliminacion = MutableStateFlow<UiState<Unit>?>(null)
+
+    val eliminacion = _eliminacion.asStateFlow()
+
     private var postsOriginales: List<Post> = emptyList()
 
     private var detalleJob: Job? = null
     private var listaJob: Job? = null
     private var crearJob: Job? = null
+    private var eliminarJob: Job? = null
 
     init {
         cargar()
@@ -101,6 +106,7 @@ class PostsViewModel(
 
     fun abrir(id: Int) {
 
+        limpiarEliminacion()
         detalleJob?.cancel()
 
         detalleJob = viewModelScope.launch {
@@ -136,6 +142,37 @@ class PostsViewModel(
 
     fun cerrarDetalle() {
         detalleJob?.cancel()
+        limpiarEliminacion()
+    }
+
+    fun eliminar(id: Int, onExito: () -> Unit) {
+
+        if (_eliminacion.value == UiState.Cargando) return
+
+        eliminarJob?.cancel()
+
+        eliminarJob = viewModelScope.launch {
+
+            _eliminacion.value = UiState.Cargando
+
+            repo.eliminar(id)
+                .onSuccess {
+                    postsOriginales = postsOriginales.filterNot { p -> p.id == id }
+                    _lista.value = UiState.Exito(
+                        aplicarFiltroBusqueda(postsOriginales, _busquedaQuery.value)
+                    )
+                    _eliminacion.value = UiState.Exito(Unit)
+                    onExito()
+                }
+                .onFailure { error ->
+                    _eliminacion.value = UiState.Error(mensajeDe(error))
+                }
+        }
+    }
+
+    fun limpiarEliminacion() {
+        eliminarJob?.cancel()
+        _eliminacion.value = null
     }
 
     fun publicar(titulo: String, texto: String) {

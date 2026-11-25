@@ -140,7 +140,8 @@ class MainActivity : ComponentActivity() {
                             id != null -> {
                                 PantallaDetalle(
                                     vm = vm,
-                                    id = id
+                                    id = id,
+                                    onEliminado = volver
                                 )
                             }
 

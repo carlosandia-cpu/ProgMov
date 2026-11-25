@@ -17,6 +17,8 @@ interface PostRepository {
     suspend fun porUsuario(userId: Int): Result<List<Post>>
 
     suspend fun crear(nuevo: NuevoPost): Result<Post>
+
+    suspend fun eliminar(id: Int): Result<Unit>
 }
 
 class PostRepositoryRemote(
@@ -37,6 +39,14 @@ class PostRepositoryRemote(
 
     override suspend fun crear(nuevo: NuevoPost): Result<Post> =
         llamar { api.crear(nuevo) }
+
+    override suspend fun eliminar(id: Int): Result<Unit> =
+        llamar {
+            val respuesta = api.eliminar(id)
+            if (!respuesta.isSuccessful) {
+                throw Exception("Error al eliminar (${respuesta.code()})")
+            }
+        }
 
     private suspend fun <T> llamar(
         bloque: suspend () -> T
