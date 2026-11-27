@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -31,6 +32,7 @@ fun PantallaAvisos(vm: AvisosViewModel) {
     val faltan by vm.faltan.collectAsState()
     val escuchando by vm.escuchandoAvion.collectAsState()
     val avisos by vm.avisos.collectAsState()
+    val mensaje by vm.mensaje.collectAsState()
 
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -46,8 +48,12 @@ fun PantallaAvisos(vm: AvisosViewModel) {
 
     LaunchedEffect(Unit) {
         vm.eventos.collect { aviso ->
+
             val mostrado = Notificador.mostrar(contexto, aviso)
-            // TODO Paso 8: manejar permiso denegado
+
+            if (!mostrado) {
+                vm.noSePudoMostrar()
+            }
         }
     }
 
@@ -118,7 +124,9 @@ fun PantallaAvisos(vm: AvisosViewModel) {
 
                 Button(
                     onClick = {
-                        if (Build.VERSION.SDK_INT >= 33) {
+                        if (Notificador.tienePermiso(contexto)) {
+                            vm.permisoRespondido(true)
+                        } else if (Build.VERSION.SDK_INT >= 33) {
                             lanzador.launch(
                                 Manifest.permission.POST_NOTIFICATIONS
                             )
@@ -128,6 +136,43 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                     }
                 ) {
                     Text("Permitir notificaciones")
+                }
+
+                if (permiso == PermisoUi.Denegado) {
+
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(
+                                Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                            ).apply {
+                                putExtra(
+                                    Settings.EXTRA_APP_PACKAGE,
+                                    contexto.packageName
+                                )
+                            }
+
+                            contexto.startActivity(intent)
+                        }
+                    ) {
+                        Text("Abrir ajustes")
+                    }
+                }
+            }
+
+            mensaje?.let { texto ->
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor =
+                            MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = texto,
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
                 }
             }
 
