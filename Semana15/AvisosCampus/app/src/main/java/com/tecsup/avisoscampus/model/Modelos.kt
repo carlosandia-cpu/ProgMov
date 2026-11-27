@@ -3,7 +3,10 @@ package com.tecsup.avisoscampus.model
 enum class Origen(val texto: String) {
     BOTON("Botón"),
     RECORDATORIO("Recordatorio"),
-    MODO_AVION("Modo avión")
+    MODO_AVION("Modo avión");
+
+    val esUrgente: Boolean
+        get() = this == RECORDATORIO
 }
 
 data class Aviso(
@@ -12,7 +15,10 @@ data class Aviso(
     val texto: String,
     val origen: Origen,
     val hora: String
-)
+) {
+    val esUrgente: Boolean
+        get() = origen.esUrgente
+}
 
 sealed interface PermisoUi {
     data object SinPedir : PermisoUi
