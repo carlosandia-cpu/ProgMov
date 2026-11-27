@@ -1,5 +1,9 @@
 package com.tecsup.avisoscampus.ui
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.tecsup.avisoscampus.model.PermisoUi
 import com.tecsup.avisoscampus.notificacion.Notificador
 import com.tecsup.avisoscampus.viewmodel.AvisosViewModel
 
@@ -18,6 +23,19 @@ import com.tecsup.avisoscampus.viewmodel.AvisosViewModel
 fun PantallaAvisos(vm: AvisosViewModel) {
 
     val contexto = LocalContext.current
+    val permiso by vm.permiso.collectAsState()
+
+    val lanzador = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { concedido ->
+        vm.permisoRespondido(concedido)
+    }
+
+    LaunchedEffect(Unit) {
+        if (Notificador.tienePermiso(contexto)) {
+            vm.permisoRespondido(true)
+        }
+    }
 
     LaunchedEffect(Unit) {
         vm.eventos.collect { aviso ->
@@ -49,14 +67,34 @@ fun PantallaAvisos(vm: AvisosViewModel) {
 
             TarjetaAvisos("Permiso de notificaciones") {
 
-                Text(
-                    text = "Sin pedir",
-                    color = Color.Gray
-                )
+                when (permiso) {
+                    PermisoUi.SinPedir -> Text(
+                        text = "Sin pedir",
+                        color = Color.Gray
+                    )
 
-                // TODO Paso 2: solicitar permiso
+                    PermisoUi.Concedido -> Text(
+                        text = "Permitido",
+                        color = Color(0xFF2E7D32)
+                    )
 
-                Button(onClick = {}) {
+                    PermisoUi.Denegado -> Text(
+                        text = "Denegado",
+                        color = Color(0xFFC62828)
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= 33) {
+                            lanzador.launch(
+                                Manifest.permission.POST_NOTIFICATIONS
+                            )
+                        } else {
+                            vm.permisoRespondido(true)
+                        }
+                    }
+                ) {
                     Text("Permitir notificaciones")
                 }
             }
