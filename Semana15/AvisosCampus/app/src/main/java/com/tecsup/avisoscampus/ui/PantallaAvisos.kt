@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import com.tecsup.avisoscampus.model.PermisoUi
 import com.tecsup.avisoscampus.notificacion.Notificador
 import com.tecsup.avisoscampus.receiver.ModoAvionReceiver
+import com.tecsup.avisoscampus.receiver.CargadorReceiver
 import com.tecsup.avisoscampus.viewmodel.AvisosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,11 +29,13 @@ import com.tecsup.avisoscampus.viewmodel.AvisosViewModel
 fun PantallaAvisos(vm: AvisosViewModel) {
 
     val contexto = LocalContext.current
+
     val permiso by vm.permiso.collectAsState()
     val faltan by vm.faltan.collectAsState()
     val escuchando by vm.escuchandoAvion.collectAsState()
     val avisos by vm.avisos.collectAsState()
     val mensaje by vm.mensaje.collectAsState()
+    val escuchandoCargador by vm.escuchandoCargador.collectAsState()
 
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -69,6 +72,35 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                 contexto,
                 receptor,
                 IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+
+            onDispose {
+                contexto.unregisterReceiver(receptor)
+            }
+
+        } else {
+            onDispose { }
+        }
+    }
+
+    DisposableEffect(escuchandoCargador) {
+
+        if (escuchandoCargador) {
+
+            val receptor = CargadorReceiver { conectado ->
+                vm.alCambiarCargador(conectado)
+            }
+
+            val filtro = IntentFilter().apply {
+                addAction(Intent.ACTION_POWER_CONNECTED)
+                addAction(Intent.ACTION_POWER_DISCONNECTED)
+            }
+
+            ContextCompat.registerReceiver(
+                contexto,
+                receptor,
+                filtro,
                 ContextCompat.RECEIVER_NOT_EXPORTED
             )
 
@@ -221,6 +253,24 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                         checked = escuchando,
                         onCheckedChange = {
                             vm.cambiarEscucha(it)
+                        }
+                    )
+                }
+            }
+
+            TarjetaAvisos("Conexión del cargador") {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Escuchar cargador")
+
+                    Switch(
+                        checked = escuchandoCargador,
+                        onCheckedChange = {
+                            vm.cambiarEscuchaCargador(it)
                         }
                     )
                 }
