@@ -8,6 +8,8 @@ import com.tecsup.avisoscampus.model.Origen
 import com.tecsup.avisoscampus.model.PermisoUi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 class AvisosViewModel(
     private val repo: AvisosRepository
@@ -47,7 +49,40 @@ class AvisosViewModel(
         }
     }
 
-    // TODO Paso 5: recordatorio
+    private var trabajo: Job? = null
+
+    private val _faltan = MutableStateFlow<Int?>(null)
+    val faltan: StateFlow<Int?> = _faltan.asStateFlow()
+
+    fun recordarEn(segundos: Int = 10) {
+
+        if (trabajo?.isActive == true) return
+
+        trabajo = viewModelScope.launch {
+            try {
+
+                for (i in segundos downTo 1) {
+                    _faltan.value = i
+                    delay(1000)
+                }
+
+                val aviso = repo.registrar(
+                    titulo = "Recordatorio",
+                    texto = "Revisa tu laboratorio pendiente",
+                    origen = Origen.RECORDATORIO
+                )
+
+                _eventos.emit(aviso)
+
+            } finally {
+                _faltan.value = null
+            }
+        }
+    }
+
+    fun cancelarRecordatorio() {
+        trabajo?.cancel()
+    }
 
     // TODO Paso 6: modo avión
 
