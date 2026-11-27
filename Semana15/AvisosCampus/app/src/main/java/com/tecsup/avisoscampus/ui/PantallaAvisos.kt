@@ -17,6 +17,10 @@ import androidx.compose.ui.unit.dp
 import com.tecsup.avisoscampus.model.PermisoUi
 import com.tecsup.avisoscampus.notificacion.Notificador
 import com.tecsup.avisoscampus.viewmodel.AvisosViewModel
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
+import com.tecsup.avisoscampus.receiver.ModoAvionReceiver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,6 +29,7 @@ fun PantallaAvisos(vm: AvisosViewModel) {
     val contexto = LocalContext.current
     val permiso by vm.permiso.collectAsState()
     val faltan by vm.faltan.collectAsState()
+    val escuchando by vm.escuchandoAvion.collectAsState()
 
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -42,6 +47,30 @@ fun PantallaAvisos(vm: AvisosViewModel) {
         vm.eventos.collect { aviso ->
             val mostrado = Notificador.mostrar(contexto, aviso)
             // TODO Paso 8: manejar permiso denegado
+        }
+    }
+
+    DisposableEffect(escuchando) {
+
+        if (escuchando) {
+
+            val receptor = ModoAvionReceiver { activo ->
+                vm.alCambiarModoAvion(activo)
+            }
+
+            ContextCompat.registerReceiver(
+                contexto,
+                receptor,
+                IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+
+            onDispose {
+                contexto.unregisterReceiver(receptor)
+            }
+
+        } else {
+            onDispose { }
         }
     }
 
@@ -134,8 +163,6 @@ fun PantallaAvisos(vm: AvisosViewModel) {
 
             TarjetaAvisos("Receptor de anuncios") {
 
-                // TODO Paso 6: escuchar modo avion
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -144,8 +171,10 @@ fun PantallaAvisos(vm: AvisosViewModel) {
                     Text("Escuchar el modo avión")
 
                     Switch(
-                        checked = false,
-                        onCheckedChange = {}
+                        checked = escuchando,
+                        onCheckedChange = {
+                            vm.cambiarEscucha(it)
+                        }
                     )
                 }
             }
