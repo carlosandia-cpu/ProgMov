@@ -23,6 +23,7 @@ object Notificador {
 
     fun crearCanal(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
             val manager = context.getSystemService(
                 NotificationManager::class.java
             )
@@ -32,6 +33,7 @@ object Notificador {
                 "Avisos",
                 NotificationManager.IMPORTANCE_DEFAULT
             )
+
             manager.createNotificationChannel(canalAvisos)
 
             val canalUrgentes = NotificationChannel(
@@ -39,6 +41,7 @@ object Notificador {
                 "Urgentes",
                 NotificationManager.IMPORTANCE_HIGH
             )
+
             manager.createNotificationChannel(canalUrgentes)
         }
     }
@@ -73,13 +76,26 @@ object Notificador {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        val canalId = if (aviso.esUrgente) CANAL_URGENTES else CANAL_AVISOS
-        val prioridad = if (aviso.esUrgente) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT
+        val canalId = if (aviso.esUrgente) {
+            CANAL_URGENTES
+        } else {
+            CANAL_AVISOS
+        }
+
+        val prioridad = if (aviso.esUrgente) {
+            NotificationCompat.PRIORITY_HIGH
+        } else {
+            NotificationCompat.PRIORITY_DEFAULT
+        }
 
         val notificacion = NotificationCompat.Builder(context, canalId)
             .setSmallIcon(R.drawable.ic_notificacion)
             .setContentTitle(aviso.titulo)
             .setContentText(aviso.texto)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(aviso.texto)
+            )
             .setPriority(prioridad)
             .setContentIntent(pendiente)
             .setAutoCancel(true)

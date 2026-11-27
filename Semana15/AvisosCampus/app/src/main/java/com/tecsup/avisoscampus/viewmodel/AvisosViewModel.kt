@@ -72,7 +72,10 @@ class AvisosViewModel(
 
                 val aviso = repo.registrar(
                     titulo = "Recordatorio",
-                    texto = "Revisa tu laboratorio pendiente",
+                    texto = "Revisa tu laboratorio pendiente. " +
+                            "Recuerda completar los ejercicios, " +
+                            "verificar el funcionamiento de tu aplicación " +
+                            "y preparar las evidencias para la entrega final.",
                     origen = Origen.RECORDATORIO
                 )
 
